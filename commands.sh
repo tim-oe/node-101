@@ -8,7 +8,7 @@ npm install --save-dev typescript @types/node ts-node nodemon tsconfig-paths
 # tsconfig
 npx tsc --init --rootDir src --outDir build --esModuleInterop --resolveJsonModule --lib es6 --module commonjs --allowJs true --noImplicitAny true
 # jest install
-npm install --save-dev jest @types/jest
+npm install --save-dev jest @types/jest ts-jest
 # jest.config, follow prompts
 jest --init
 # eslint install
