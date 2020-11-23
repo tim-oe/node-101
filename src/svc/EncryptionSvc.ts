@@ -1,5 +1,5 @@
 export class EncryptionSvc {
-    protected static readonly AES_IV_LENGTH: number = 32;
+    protected static readonly AES_IV_LENGTH: number = 16;
     protected static readonly AES_KEY_LENGTH: number = 32;
     protected static readonly ALGORTHM = 'aes-256-ctr';
     protected static readonly DIGEST = 'sha256';
@@ -13,11 +13,8 @@ export class EncryptionSvc {
 
     protected iv = this.crypto.randomBytes(4)
 
-    // https://www.hacksparrow.com/nodejs/how-to-generate-md5-sha1-sha512-sha256-checksum-hashes.html
-    protected hasher = this.crypto.createHash(EncryptionSvc.DIGEST);
-
-    protected getSecret = (): Buffer => {
-      let hash = this.hasher.update('nqZAiIeV2STR').digest();
+     protected getSecret = (): Buffer => {
+      let hash = this.crypto.createHash(EncryptionSvc.DIGEST).update('nqZAiIeV2STR').digest();
 
       hash = hash.subarray(0, EncryptionSvc.AES_KEY_LENGTH);
       console.log(' secret hash ' + hash.toString('hex'));
@@ -36,7 +33,7 @@ export class EncryptionSvc {
         throw Error('A value is required!');
       }
 
-      let hash = this.hasher.update(this.iv).digest();
+      let hash = this.crypto.createHash(EncryptionSvc.DIGEST).update(this.iv).digest();
       hash = hash.subarray(0, EncryptionSvc.AES_IV_LENGTH);
       console.log('encrypt iv hash ' + hash.toString('hex'));
 
