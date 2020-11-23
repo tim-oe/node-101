@@ -1,4 +1,4 @@
-import EncryptionSvc from '../../src/svc/EncryptionSvc';
+import {EncryptionSvc} from '../../src/svc/EncryptionSvc';
 
 test('round trip', () => {
   const expected = '666666CP';

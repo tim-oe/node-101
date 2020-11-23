@@ -1,5 +1,4 @@
-
-export default class EncryptionSvc {
+export class EncryptionSvc {
     protected static readonly AES_IV_LENGTH: number = 32;
     protected static readonly AES_KEY_LENGTH: number = 32;
     protected static readonly ALGORTHM = 'aes-256-ctr';
