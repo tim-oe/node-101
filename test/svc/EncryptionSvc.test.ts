@@ -1,13 +1,28 @@
-import {EncryptionSvc} from '../../src/svc/EncryptionSvc';
+import EncryptionSvc from '../../src/svc/EncryptionSvc';
 
-test('round trip', () => {
-  const expected = '666666CP';
+describe("EncryptionSvc Test", () => {
 
-  const crypt = new EncryptionSvc();
+  beforeAll(async () => {
+    //TODO code to run before all tests
+  });
 
-  const value = crypt.encrypt(expected);
+  beforeEach(async () => {
+    //TODO code to run before each tests
+  });
 
-  console.log(' encrypted [' + value + ']');
+  afterEach(async () => {
+    //TODO code to run after each tests
+  });
 
-  expect(crypt.decrypt(value)).toBe(expected);
+  it("should round trip", async () => {
+    const expected = '666666CP';
+
+    const crypt = new EncryptionSvc();
+
+    const value = crypt.encrypt(expected);
+
+    console.log(' encrypted [' + value + ']');
+
+    expect(crypt.decrypt(value)).toBe(expected);
+  });
 });

@@ -7,6 +7,8 @@ npx gitignore node
 npm i --save-dev typescript @types/node ts-node nodemon tsconfig-paths
 # tsconfig
 npx tsc --init --rootDir src --outDir build --esModuleInterop --resolveJsonModule --lib es6 --module commonjs --allowJs true --noImplicitAny true
+# winston logger
+npm i winston
 # express
 npm i express
 npm i --save-dev @types/express
