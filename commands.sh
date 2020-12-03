@@ -12,6 +12,8 @@ npm i winston
 # express
 npm i express
 npm i --save-dev @types/express
+# aws sdk
+npm i aws-sdk
 # jest install
 npm i --save-dev jest @types/jest ts-jest
 # install globally
@@ -24,3 +26,9 @@ npm i --save-dev eslint
 npx eslint --init
 # jsDoc install
 npm add --save-dev jsdoc docdash jsdoc-to-markdown
+# serverless install
+sudo npm install -g serverless
+# initialize serverless (follow prompts)
+serverless
+# serverless localstack libs
+npm i serverless-localstack
