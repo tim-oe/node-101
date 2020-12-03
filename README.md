@@ -8,6 +8,8 @@
 - [jest](https://jestjs.io/)
 - [eslint](https://eslint.org/docs/developer-guide/nodejs-api)
 - [jsDoc](https://www.npmjs.com/package/jsdoc)
+- [serverless](https://www.serverless.com/)
+- [localstack](https://github.com/localstack/localstack)
 
 # project setup
 
@@ -19,6 +21,8 @@
 - [init eslint](https://eslint.org/docs/user-guide/getting-started)
 - [gitignore](https://philna.sh/blog/2019/01/10/how-to-start-a-node-js-project/)
 - [init jsdoc](https://medium.com/swlh/creating-better-jsdoc-documentation-8b7a65744dcb)
+- [init serverless](https://www.serverless.com/framework/docs/getting-started/)
+- [init localstack](https://medium.com/manomano-tech/using-serverless-framework-localstack-to-test-your-aws-applications-locally-17748ffe6755)
 
 # FAQ
 
