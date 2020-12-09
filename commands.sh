@@ -14,6 +14,8 @@ npm i express
 npm i --save-dev @types/express
 # aws sdk
 npm i aws-sdk
+npm i aws-lambda
+npm i --save-dev @types/aws-lambda
 # jest install
 npm i --save-dev jest @types/jest ts-jest
 # install globally
