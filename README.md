@@ -2,17 +2,18 @@
 
 - [vs code](https://code.visualstudio.com/)
 - [node.js](https://nodejs.org/en/docs/guides/getting-started-guide/)
+- [npm](https://docs.npmjs.com/)
 - [typescript](https://www.typescriptlang.org/docs/)
-- [express](https://expressjs.com/)
 - [winston](https://github.com/winstonjs/winston)
 - [jest](https://jestjs.io/)
 - [eslint](https://eslint.org/docs/developer-guide/nodejs-api)
 - [jsDoc](https://www.npmjs.com/package/jsdoc)
 - [serverless](https://www.serverless.com/)
+- [serverless.yml](https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/?rd=true)
 - [serverless plugins](https://www.serverless.com/plugins/)
 - [localstack](https://github.com/localstack/localstack)
 
-# project setup
+# project setup, see [commands.sh](https://github.com/tim-oe/node-101/blob/main/commands.sh)
 
 - [init project](https://medium.com/@phtnhphan/how-to-setup-typescript-for-nodejs-project-45d42057f7a3)
 - [init typescript](https://khalilstemmler.com/blogs/typescript/node-starter-project/)
