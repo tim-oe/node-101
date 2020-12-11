@@ -2,7 +2,7 @@
   "name": "node-orm",
   "version": "1.0.0",
   "description": "sample node js project see README for details",
-  "main": "src/app.ts",
+  "main": "src/functions/handler.ts",
   "scripts": {
     "test": "jest"
   },

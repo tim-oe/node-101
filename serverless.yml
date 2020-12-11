@@ -55,13 +55,10 @@ provider:
   region: us-west-2
 
 package:
-  # exclude dev includes like jest and typing
-  #excludeDevDependencies: False
-  #include:
-  #  - src/**
+#  include:
+#    - src/**
 #  exclude:
 #    - exclude-me.js
-#    - exclude-me-dir/**
 
 functions:
   echo:
