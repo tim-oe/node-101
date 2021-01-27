@@ -7,6 +7,8 @@ npx gitignore node
 npm i -D typescript @types/node ts-node nodemon tsconfig-paths
 # tsconfig
 npx tsc --init --rootDir src --outDir build --esModuleInterop --resolveJsonModule --lib es6 --module commonjs --allowJs true --noImplicitAny true
+# mongodb lib
+npm i mongoose
 # winston logger
 npm i winston
 # aws sdk libs
@@ -30,3 +32,8 @@ sudo npm install -g serverless
 serverless
 # serverless plugins
 npm i -D serverless-localstack serverless-plugin-typescript serverless-plugin-include-dependencies serverless-plugin-include-dependencies serverless-plugin-common-excludes
+# create docker network
+docker network create shared
+# deployment s3 bucket
+awslocal s3api create-bucket --bucket node-101-local-deploy
+awslocal s3api put-bucket-acl --bucket node-101-local-deploy --acl public-read

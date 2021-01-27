@@ -5,6 +5,7 @@
 - [npm](https://docs.npmjs.com/)
 - [typescript](https://www.typescriptlang.org/docs/)
 - [winston](https://github.com/winstonjs/winston)
+- [mongoos](https://mongoosejs.com)
 - [jest](https://jestjs.io/)
 - [eslint](https://eslint.org/docs/developer-guide/nodejs-api)
 - [jsDoc](https://www.npmjs.com/package/jsdoc)

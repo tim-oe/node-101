@@ -7,12 +7,14 @@ import winston from 'winston';
 export const logConfiguration = {
     'transports': [
         new winston.transports.Console({
-            level: 'warn',
-        }),
+            level: 'info',
+        })
+/*        
         new winston.transports.File({
             level: 'info',
             filename: 'logs/prom-warm-lead.log'
         })
+*/
     ],
     format: winston.format.combine(
         winston.format.timestamp({
