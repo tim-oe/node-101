@@ -1,9 +1,10 @@
 version: "3.7"
 
 services:
+  # https://github.com/localstack/localstack
   localstack:
     container_name: localstack
-    image: localstack/localstack-full:0.12.2
+    image: localstack/localstack-full:latest
     hostname: localstack
     ports:
       - "4566:4566"
@@ -11,7 +12,6 @@ services:
     environment:
       - DEFAULT_REGION=us-west-2
       - SERVICES=apigateway,cloudformation,cloudwatch,dynamodb,es,firehose,iam,kinesis,lambda,route53,redshift,s3,secretsmanager,ses,sns,sqs,ssm,stepfunctions,sts
-      # - SERVICES=s3,sqs,lambda,cloudformation,sts,iam,cloudwatch,apigateway,events,dynamodb
       - DEBUG=1
       - DATA_DIR=/tmp/localstack/data
       - PORT_WEB_UI=8080
@@ -29,6 +29,19 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - ./bin:/docker-entrypoint-initaws.d
 
+  # TODO make external
+  # https://zgadzaj.com/development/docker/docker-compose/containers/mongodb
+  # https://dev.to/sonyarianto/how-to-spin-mongodb-server-with-docker-and-docker-compose-2lef
+  mongodb_container:
+    image: mongo:latest
+    hostname: mongo
+    ports:
+        - 27017:27017
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: root
+        MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+        - ./data/mongo/:/data/db/      
 networks:
    default:
       external:

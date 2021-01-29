@@ -28,6 +28,7 @@ provider:
   logRetentionInDays: 14
   region: us-west-2
   deploymentPrefix: aws-lambda
+  # very important, deployment wont fail but execution wiil without this
   deploymentBucket: # when using localstack its important that before you deploy your lambda your s3 bucket already exists you can do this automatically via adding your aws cli create bucket commands to the localstack-entrypoint.sh script
     name: ${self:service}-${opt:stage}-deploy
 
@@ -46,11 +47,6 @@ plugins:
 package:
   individually: true
 
-#  include:
-#    - src/**
-#  exclude:
-#    - exclude-me.js
-
 functions:
   echo:
     handler: src/functions/handler.echo
@@ -65,16 +61,16 @@ functions:
     package:
       include:
         - src/**/*
-   # record:
-  #   handler: src/functions/handler.record
-  #   runtime: nodejs12.x
-  #   timeout: 20
-  #   memorySize: 256
-  #   events:
-  #     - sqs:
-  #         arn: arn:aws:sqs:us-west-2:000000000000:click
-  #         batchSize: 10
-  #         enabled: true
+  record:
+    handler: src/functions/handler.record
+    runtime: nodejs12.x
+    timeout: 20
+    memorySize: 256
+    events:
+      - sqs:
+          arn: arn:aws:sqs:us-west-2:000000000000:node-101-click
+          batchSize: 10
+          enabled: true
 
 custom:
   region: ${self:provider.region}
@@ -95,14 +91,8 @@ custom:
     endpoints:
       # This section is optional - can be used for customizing the target endpoints
       S3: http://localhost:4566
-      DynamoDB: http://localhost:4566
-      CloudFormation: http://localhost:4566
-      Elasticsearch: http://localhost:4566
-      ES: http://localhost:4566
-      SNS: http://localhost:4566
       SQS: http://localhost:4566
       Lambda: http://localhost:4566
-      Kinesis: http://localhost:4566
     lambda:
       # Enable this flag to improve performance
       mountCode: false

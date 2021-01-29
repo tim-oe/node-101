@@ -37,3 +37,5 @@ docker network create shared
 # deployment s3 bucket
 awslocal s3api create-bucket --bucket node-101-local-deploy
 awslocal s3api put-bucket-acl --bucket node-101-local-deploy --acl public-read
+# deploy lambda
+serverless deploy --stage local --profile localstack --region us-west-2

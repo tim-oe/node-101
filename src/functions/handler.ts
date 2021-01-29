@@ -13,7 +13,7 @@ const sqs = new AWS.SQS();
 AWS.config.update({ region: 'us-west-2' });
 const baseUlr = 'http://localhost:4566';
 const accountId = '000000000000';
-const queueName = 'click';
+const queueName = 'node-101-click';
 
 /**
  * API Gateway event handler
@@ -29,36 +29,37 @@ export const echo: APIGatewayProxyHandler = async (
     context: Context,
     callback: Callback,
   ): Promise<any> => {
-//module.exports.echo = (event, context, callback) => {
+    logger.info('Received api gateway event ', event);
 
-    logger.info('Received api gateway event:', JSON.stringify(event, null, 2));
+    const params = {
+        MessageBody: JSON.stringify(event),
+        QueueUrl: `${baseUlr}/${accountId}/${queueName}`,
+        DelaySeconds: 0
+    };
 
-    // const params = {
-    //     MessageBody: JSON.stringify(event),
-    //     QueueUrl: `${baseUlr}/${accountId}/${queueName}`
-    // };
+    logger.info('posting request to ' + `${baseUlr}/${accountId}/${queueName}`);
 
-    // sqs.sendMessage(params, (err, data) => {
-    //     if (err) {
-    //         logger.error('failed to post ' + JSON.stringify(data, null, 2), err);
-    //     }
-    // });
+    sqs.sendMessage(params, (err, data) => {
+        if (err) {
+            logger.error('failed to post ' + data, err);
+        } else {
+            logger.info('posted request to ' + `${baseUlr}/${accountId}/${queueName}`);
+        }
+    });
 
     //TODO set cookie
     return {
-        statusCode: 444,
+        statusCode: 200,
         body: JSON.stringify({
             message: 'echo',
             input: event,
         }),
     };
-
-    //callback(null, response);
 }
 
 /**
  * SQS event handler
- * awslocal sqs create-queue --queue-name click
+ * awslocal sqs create-queue --queue-name node-101-click
  * see https://docs.aws.amazon.com/lambda/latest/dg/nodejs-handler.html
  * see https://docs.aws.amazon.com/lambda/latest/dg/with-sqs-create-package.html#with-sqs-example-deployment-pkg-nodejs
  * @param event see https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html
@@ -70,10 +71,9 @@ export const record: SQSHandler = async (
     context: Context,
     callback: Callback,
   ): Promise<any> => {
-//module.exports.record = async (event, context, callback) => {
 
     event.Records.forEach(record => {
-        logger.info('Received sqs record:', JSON.stringify(record, null, 2));
+        logger.info('Received sqs record:', record);
     });
 
     //TODO insert into collection
