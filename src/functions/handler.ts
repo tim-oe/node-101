@@ -10,7 +10,15 @@ const logger = winston.createLogger(logConfiguration);
 const sqs = new AWS.SQS();
 //TODO externalize SQS endpoint
 // Set the region we will be using
-AWS.config.update({ region: 'us-west-2' });
+
+const SESConfig = {
+    accessKeyId: "foo",
+    accessSecretKey: "bar",
+    region: "us-west-2"
+}
+
+AWS.config.update(SESConfig);
+
 const baseUlr = 'http://localhost:4566';
 const accountId = '000000000000';
 const queueName = 'node-101-click';
@@ -32,21 +40,20 @@ export const echo: APIGatewayProxyHandler = async (
     logger.info('Received api gateway event ', event);
 
     const params = {
-        MessageBody: JSON.stringify(event),
-        QueueUrl: `${baseUlr}/${accountId}/${queueName}`,
+        MessageBody: "clicked",
+        QueueUrl: "http://localhost:4566/000000000000/node-101-click",
         DelaySeconds: 0
     };
 
     logger.info('posting request to ' + `${baseUlr}/${accountId}/${queueName}`);
 
-    sqs.sendMessage(params, (err, data) => {
-        if (err) {
-            logger.error('failed to post ' + data, err);
-        } else {
-            logger.info('posted request to ' + `${baseUlr}/${accountId}/${queueName}`);
-        }
-    });
-
+    // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs
+    try {
+        await sqs.sendMessage(params).promise(); // since your handler returns a promise, lambda will only resolve after sqs responded with either failure or success
+    } catch (err) {
+        logger.error('failed to post ' + params, err);
+    }
+  
     //TODO set cookie
     return {
         statusCode: 200,
