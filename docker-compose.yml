@@ -18,6 +18,7 @@ services:
       - LAMBDA_EXECUTOR=docker-reuse
       - LAMBDA_REMOTE_DOCKER=true
       - LAMBDA_REMOVE_CONTAINERS=true
+      #- LAMBDA_DOCKER_NETWORK=
       - KINESIS_ERROR_PROBABILITY=${KINESIS_ERROR_PROBABILITY- }
       - DOCKER_HOST=unix:///var/run/docker.sock
       # DOCKER_CMD="sudo docker"
@@ -29,20 +30,20 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
       - ./bin:/docker-entrypoint-initaws.d
 
-  # TODO make external
-  # https://zgadzaj.com/development/docker/docker-compose/containers/mongodb
-  # https://dev.to/sonyarianto/how-to-spin-mongodb-server-with-docker-and-docker-compose-2lef
-  mongodb_container:
-    image: mongo:latest
-    hostname: mongo
-    ports:
-        - 27017:27017
-    environment:
-        MONGO_INITDB_ROOT_USERNAME: root
-        MONGO_INITDB_ROOT_PASSWORD: root
-    volumes:
-        - ./data/mongo/:/data/db/      
-networks:
-   default:
-      external:
-         name: shared
+#   # TODO make external
+#   # https://zgadzaj.com/development/docker/docker-compose/containers/mongodb
+#   # https://dev.to/sonyarianto/how-to-spin-mongodb-server-with-docker-and-docker-compose-2lef
+#   mongodb_container:
+#     image: mongo:latest
+#     hostname: mongo
+#     ports:
+#         - 27017:27017
+#     environment:
+#         MONGO_INITDB_ROOT_USERNAME: root
+#         MONGO_INITDB_ROOT_PASSWORD: root
+#     volumes:
+#         - ./data/mongo/:/data/db/      
+# networks:
+#    default:
+#       external:
+#          name: shared
