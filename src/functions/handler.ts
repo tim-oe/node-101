@@ -7,16 +7,16 @@ import { logConfiguration } from "../config/logging.config";
 
 const logger = winston.createLogger(logConfiguration);
 
-// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
-const sqs = new AWS.SQS({apiVersion: '2012-11-05'});
-//TODO externalize SQS endpoint
-// Set the region we will be using
-
 // https://stackoverflow.com/questions/61028751/missing-credentials-in-config-if-using-aws-config-file-set-aws-sdk-load-config
-
 const config = new AWS.Config();
 config.credentials = new AWS.Credentials("test","test");
 config.region = "us-west-2";
+
+AWS.config.update(config)
+
+// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
+const sqs = new AWS.SQS();
+//TODO externalize SQS endpoint
 
 const baseUlr = 'http://localhost:4566';
 const accountId = '000000000000';
@@ -37,8 +37,6 @@ export const echo: APIGatewayProxyHandler = async (
     callback: Callback,
   ): Promise<any> => {
     logger.info('Received api gateway event ', event);
-
-    AWS.config.update(config);
 
     const params = {
         MessageBody: "clicked",
