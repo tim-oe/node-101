@@ -31,7 +31,7 @@
 
 # project structure
 - [handler class](https://github.com/tim-oe/node-101/blob/main/src/functions/handler.ts)
-    - echo: dumps response into sqs
+    - echo: dumps request into sqs
     - record: dupes sqs message to persistance store (TBD)
 # commands
 - deploy >> `serverless deploy --stage local --region us-west-2`
@@ -39,7 +39,7 @@
 - list apigateway resources >> `awslocal apigateway get-resources --rest-api-id <id>`
 - list lambda functions >> `awslocal lambda list-functions`
 - list logs >> `aws --endpoint-url http://localhost:4566 logs describe-log-groups`
-- tail lambda logs (aws cli v2) >> `aws --endpoint-url=http://localhost:4566 logs tail ,<logGroupName. --follow`
+- tail lambda logs (aws cli v2) >> `aws --endpoint-url=http://localhost:4566 logs tail <logGroupName> --follow`
 
 # execute api gateway lambda
 - `curl -v -i  http://localhost:4566/restapis/XXX/local/_user_request_/echo`
