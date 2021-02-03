@@ -9,16 +9,22 @@ const logger = winston.createLogger(logConfiguration);
 
 // https://stackoverflow.com/questions/61028751/missing-credentials-in-config-if-using-aws-config-file-set-aws-sdk-load-config
 const config = new AWS.Config();
-config.credentials = new AWS.Credentials("test","test");
+config.credentials = new AWS.Credentials(
+    "test",
+    "test"
+);
 config.region = "us-west-2";
 
+// need to set creds before creating sqs client
+// https://stackoverflow.com/questions/56152697/could-not-load-credentials-from-any-providers-when-attempting-upload-to-aws-s3
 AWS.config.update(config)
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
 const sqs = new AWS.SQS();
-//TODO externalize SQS endpoint
 
-const baseUlr = 'http://localhost:4566';
+//TODO externalize SQS endpoint
+// https://github.com/localstack/localstack/issues/3068
+const baseUlr = 'http://' + process.env.LOCALSTACK_HOSTNAME + ':4566';
 const accountId = '000000000000';
 const queueName = 'node-101-click';
 
@@ -44,13 +50,14 @@ export const echo: APIGatewayProxyHandler = async (
         DelaySeconds: 0
     };
 
-    logger.info('posting request to ' + `${baseUlr}/${accountId}/${queueName}`);
+    logger.info('posting request to sqs: ' + params);
 
     // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs
     try {
         await sqs.sendMessage(params).promise(); // since your handler returns a promise, lambda will only resolve after sqs responded with either failure or success
+        logger.info('post to sqs success');
     } catch (err) {
-        logger.error('failed to post ' + params, err);
+        logger.error('failed to post to sqs ' + params, err);
     }
   
     //TODO set cookie
