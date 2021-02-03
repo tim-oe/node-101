@@ -1,4 +1,4 @@
-# node sample project to provide basic setup
+# node.js aws sample project 
 
 - [vs code](https://code.visualstudio.com/)
 - [node.js](https://nodejs.org/en/docs/guides/getting-started-guide/)
@@ -29,12 +29,20 @@
 - [init serverless](https://www.serverless.com/framework/docs/getting-started/)
 - [init localstack](https://medium.com/manomano-tech/using-serverless-framework-localstack-to-test-your-aws-applications-locally-17748ffe6755)
 
+# project structure
+- [handler class](https://github.com/tim-oe/node-101/blob/main/src/functions/handler.ts)
+    - echo: dumps response into sqs
+    - record: dupes sqs message to persistance store (TBD)
 # commands
-- create queue >> awslocal sqs create-queue --queue-name click --region us-west-2
-- deploy >> serverless deploy --stage local --region us-west-2
-- list apigateway >> awslocal apigateway get-rest-apis
-- list apigateway resources >> awslocal apigateway get-resources --rest-api-id <id>
-- list lambda functions >> awslocal lambda list-functions
-# FAQ
+- deploy >> `serverless deploy --stage local --region us-west-2`
+- list apigateway >> `awslocal apigateway get-rest-apis`
+- list apigateway resources >> `awslocal apigateway get-resources --rest-api-id <id>`
+- list lambda functions >> `awslocal lambda list-functions`
+- list logs >> `aws --endpoint-url http://localhost:4566 logs describe-log-groups`
+- tail lambda logs (aws cli v2) >> `aws --endpoint-url=http://localhost:4566 logs tail ,<logGroupName. --follow`
 
+# execute api gateway lambda
+- `curl -v -i  http://localhost:4566/restapis/XXX/local/_user_request_/echo`
+    - replace XXX with endpoint hash displayed as part of successful deploy
+# FAQ
 - [debugging with vsCode](https://code.visualstudio.com/docs/editor/debugging)
