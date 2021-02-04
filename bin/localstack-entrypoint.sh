@@ -25,5 +25,10 @@ awslocal s3api put-bucket-acl --bucket node-101-local-deploy --acl public-read
 printf "aws sqs\n"
 awslocal sqs create-queue --queue-name node-101-click
 
+printf "aws s3\n"
+awslocal s3api create-bucket --bucket node-101-archive
+# TODO figure right perms
+awslocal s3api put-bucket-acl --bucket node-101-archive --acl public-read
+
 printf "localstack configuration complete\n"
 # TODO secrets manager for creds

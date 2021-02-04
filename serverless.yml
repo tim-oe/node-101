@@ -72,6 +72,17 @@ functions:
           batchSize: 10
           enabled: true
 
+  archive:
+    handler: src/functions/handler.archive
+    runtime: nodejs12.x
+    timeout: 20
+    memorySize: 256
+    events:
+      - s3:
+        bucket: node-101-archive
+        event: s3:ObjectCreated:*
+        existing: true 
+
 custom:
   region: ${self:provider.region}
   stage: ${opt:stage, self:provider.stage}

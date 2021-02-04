@@ -40,6 +40,7 @@
 - list lambda functions >> `awslocal lambda list-functions`
 - list logs >> `aws --endpoint-url http://localhost:4566 logs describe-log-groups`
 - tail lambda logs (aws cli v2) >> `aws --endpoint-url=http://localhost:4566 logs tail <logGroupName> --follow`
+- list bucket contents >> `awslocal s3api list-objects --bucket <bucket name>`
 
 # execute api gateway lambda
 - `curl -v -i  http://localhost:4566/restapis/XXX/local/_user_request_/echo`
