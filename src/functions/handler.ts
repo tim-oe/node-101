@@ -22,7 +22,9 @@ import { APIGatewayProxyResultV2 } from "../bean/APIGatewayProxyResultV2";
 import winston = require('winston');
 import { Logger } from 'winston';
 import { logConfiguration } from "../config/logging.config";
-import { ManagedUpload } from 'aws-sdk/clients/s3';
+import { eachSeries } from 'async';
+import { ManagedUpload } from "aws-sdk/clients/s3";
+//import { ManagedUpload } from 'aws-sdk/clients/s3';
 
 const logger: Logger = winston.createLogger(logConfiguration);
 
@@ -139,23 +141,25 @@ export const record: SQSHandler = async (
 ): Promise<void> => {
     logger.info('Received sqs event ', event);
 
-    const record: SQSRecord = event.Records[0];
-
-    const d: Date = new Date();
-    const request: S3.Types.PutObjectRequest = {
-        Bucket: "node-101-archive",
-        Body: Buffer.from(JSON.stringify(record.body), "utf-8"),
-        Key: 'click-' + d.getMilliseconds() + '.json'
-    };
-
-    try {
-        logger.info("uploading to s3 " + request.Key);
-        const data: ManagedUpload.SendData = await s3.upload(request).promise();
-        logger.info("uploaded to s3", data);
-    } catch (err) {
-        logger.error("error uploading to s3", err, err.stack);
-    }
+    await async.eachSeries(event.Records, async function(record: SQSRecord) {
+        try {
+            const d: Date = new Date();
+            const request: S3.Types.PutObjectRequest = {
+                Bucket: "node-101-archive",
+                Body: Buffer.from(JSON.stringify(record.body), "utf-8"),
+                Key: 'click-' + d.getMilliseconds() + '.json'
+            };
+    
+            logger.info("uploading to s3 " + request.Key);
+            const data: ManagedUpload.SendData = await s3.upload(request).promise();
+            logger.info("uploaded to s3", data);
+        } catch (err) {
+            logger.error("error uploading to s3", err, err.stack);
+        }
+    }); 
 }
+
+
 
 /**
  * S3 event handler
