@@ -2,28 +2,27 @@ import async = require("async");
 
 import AWS = require('aws-sdk');
 
-import { SQS, S3 }  from 'aws-sdk';
+import { SQS, S3 } from 'aws-sdk';
 
-import { 
-    APIGatewayProxyHandler, 
-    APIGatewayEvent, 
-    APIGatewayProxyResult, 
-    Context, 
-    Callback, 
+import {
+    APIGatewayProxyHandler,
+    APIGatewayEvent,
+    APIGatewayProxyResult,
+    Context,
+    Callback,
     SQSEvent,
-    SQSRecord, 
+    SQSRecord,
     SQSHandler,
     S3Event,
-    S3Handler 
+    S3Handler
 } from 'aws-lambda';
 
 import { APIGatewayProxyResultV2 } from "../bean/APIGatewayProxyResultV2";
 
 import winston = require('winston');
-import { Logger }  from 'winston';
+import { Logger } from 'winston';
 import { logConfiguration } from "../config/logging.config";
 import { ManagedUpload } from 'aws-sdk/clients/s3';
-
 
 const logger: Logger = winston.createLogger(logConfiguration);
 
@@ -47,9 +46,22 @@ const accountId = '000000000000';
 const queueName = 'node-101-click';
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
-const sqs: AWS.SQS = new AWS.SQS();
-//const s3: AWS.S3 = new AWS.S3({endpoint: baseUlr});
-const s3: AWS.S3 = new AWS.S3();
+// https://github.com/localstack/localstack/issues/948
+const sqsConfig: SQS.Types.ClientConfiguration = {
+    endpoint: baseUlr,
+    apiVersion: '2012-11-05'
+};
+
+// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
+const sqs: AWS.SQS = new AWS.SQS(sqsConfig);
+
+const s3Config: S3.Types.ClientConfiguration = {
+    endpoint: baseUlr,
+    apiVersion: '2006-03-01'
+}
+
+// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html
+const s3: AWS.S3 = new AWS.S3(s3Config);
 
 /**
  * API Gateway event handler
@@ -64,34 +76,47 @@ export const echo: APIGatewayProxyHandler = async (
     event: APIGatewayEvent,
     context: Context,
     callback: Callback,
-  ): Promise<APIGatewayProxyResult> => {
+): Promise<APIGatewayProxyResult> => {
     logger.info('Received api gateway event ', event);
-
-    const request: SQS.Types.SendMessageRequest = {
-        MessageBody: JSON.stringify(event),
-        QueueUrl: `${baseUlr}/${accountId}/${queueName}`,
-        DelaySeconds: 0
-    };
-
-    logger.info('posting request to sqs: ' + request);
 
     // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs
     try {
-        await sqs.sendMessage(request).promise(); // since your handler returns a promise, lambda will only resolve after sqs responded with either failure or success
-        logger.info('post to sqs success');
+        const sqsUrlParams: SQS.Types.GetQueueUrlRequest = {
+            QueueName: queueName,
+            QueueOwnerAWSAccountId: accountId
+        };
+
+        const queueUrlResult: SQS.Types.GetQueueUrlResult = await sqs.getQueueUrl(sqsUrlParams).promise(); // since your handler returns a promise, lambda will only resolve after sqs responded with either failure or success
+
+        if (queueUrlResult.QueueUrl) {
+            logger.info('sqs: endpoint ' + queueUrlResult.QueueUrl);
+
+            const request: SQS.Types.SendMessageRequest = {
+                MessageBody: JSON.stringify(event),
+                //QueueUrl: queueUrlResult.QueueUrl,
+                QueueUrl: `${baseUlr}/${accountId}/${queueName}`,
+                DelaySeconds: 0
+            };
+
+            const result: SQS.Types.SendMessageResult = await sqs.sendMessage(request).promise(); // since your handler returns a promise, lambda will only resolve after sqs responded with either failure or success
+
+            logger.info('post to sqs success', result);
+        } else {
+            logger.info('failed to get endpoint for ' + queueName);
+        }
     } catch (err) {
-        logger.error('failed to post to sqs ' + request, err);
+        logger.error('failed to post to sqs', err);
     }
-  
+
     const resp: APIGatewayProxyResultV2 = {
         statusCode: 200,
         body: JSON.stringify(event),
         // https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
         // https://stackoverflow.com/questions/43190935/setting-http-response-header-from-aws-lambda#43194717
         // https://en.wikipedia.org/wiki/HTTP_cookie#Expires_and_Max-Age
-//         cookies: ["mycookie=chocolateChip; Max-Age=15552000"
-// //            ,acookie=fudgestripes; Expires="
-//         ],
+        //         cookies: ["mycookie=chocolateChip; Max-Age=15552000"
+        // //            ,acookie=fudgestripes; Expires="
+        //         ],
         headers: {
             "Set-Cookie": "mycookie=chocolateChip; Max-Age=15552000"
         }
@@ -111,54 +136,25 @@ export const record: SQSHandler = async (
     event: SQSEvent,
     context: Context,
     callback: Callback,
-  ): Promise<void> => {
-    async.eachSeries(event.Records, function(item: SQSRecord, cb) {
-        const d: Date = new Date();
-        const request: S3.Types.PutObjectRequest = {
-             Bucket: "node-101-archive",
-             Body: Buffer.from(JSON.stringify(item.body), "utf-8"),
-             Key: 'click-' + d.getMilliseconds() + '.json'
-        };
-        
-        logger.info("posting to s3 " + request.Key);
+): Promise<void> => {
+    logger.info('Received sqs event ', event);
 
-        s3.upload(request, function(err: Error, data: ManagedUpload.SendData) {
-            if (err) {
-              throw err;
-            } else {
-              logger.info("Success uploading " + data.Location);
-              cb()
-            }
-        })
-        logger.info("posted to s3 " + request.Key);
-    }, function(err) {
-        if (err) { 
-            logger.error('one of the uploads failed');
-        } else { 
-            logger.info('all files uploaded');
-        }
-    });
-    // event.Records.forEach(async (record) => {
-    //     logger.info('posting request to s3: ' + JSON.stringify(record.body));
+    const record: SQSRecord = event.Records[0];
 
-    //     const d: Date = new Date();
-    //     const request: S3.Types.PutObjectRequest = {
-    //         Bucket: "node-101-archive",
-    //         Body: Buffer.from(JSON.stringify(record.body), "utf-8"),
-    //         Key: 'click-' + d.getMilliseconds() + '.json'
-    //     };
+    const d: Date = new Date();
+    const request: S3.Types.PutObjectRequest = {
+        Bucket: "node-101-archive",
+        Body: Buffer.from(JSON.stringify(record.body), "utf-8"),
+        Key: 'click-' + d.getMilliseconds() + '.json'
+    };
 
-    //     try {
-    //         logger.info('fixing to post to s3');
-    //         const data: ManagedUpload.SendData = await new Promise((resolve, reject) => {
-    //             s3.upload(request, (err: Error, data: ManagedUpload.SendData) => err == null ? resolve(data) : reject(err));
-    //         });
-    //         logger.info('post to s3 success ' + data.Location);
-    //     } catch (err) {
-    //         logger.error('failed to post to s3 ', err);
-    //     }
-    // });
-    // logger.info('post to s3 complete');
+    try {
+        logger.info("uploading to s3 " + request.Key);
+        const data: ManagedUpload.SendData = await s3.upload(request).promise();
+        logger.info("uploaded to s3", data);
+    } catch (err) {
+        logger.error("error uploading to s3", err, err.stack);
+    }
 }
 
 /**
@@ -172,7 +168,7 @@ export const archive: S3Handler = async (
     event: S3Event,
     context: Context,
     callback: Callback,
-  ): Promise<void> => {    
+): Promise<void> => {
     event.Records.forEach(record => {
         logger.info('Received s3 record:', JSON.stringify(record));
     });
