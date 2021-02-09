@@ -3,6 +3,7 @@ import async = require("async");
 import AWS = require('aws-sdk');
 
 import { SQS, S3 } from 'aws-sdk';
+import { ManagedUpload } from "aws-sdk/clients/s3";
 
 import {
     APIGatewayProxyHandler,
@@ -22,9 +23,6 @@ import { APIGatewayProxyResultV2 } from "../bean/APIGatewayProxyResultV2";
 import winston = require('winston');
 import { Logger } from 'winston';
 import { logConfiguration } from "../config/logging.config";
-import { eachSeries } from 'async';
-import { ManagedUpload } from "aws-sdk/clients/s3";
-//import { ManagedUpload } from 'aws-sdk/clients/s3';
 
 const logger: Logger = winston.createLogger(logConfiguration);
 
@@ -57,10 +55,13 @@ const sqsConfig: SQS.Types.ClientConfiguration = {
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
 const sqs: AWS.SQS = new AWS.SQS(sqsConfig);
 
+// in localstack need to set both endpoint and s3ForcePathStyle
+// https://github.com/localstack/localstack/issues/3566
 const s3Config: S3.Types.ClientConfiguration = {
     endpoint: baseUlr,
-    apiVersion: '2006-03-01'
-}
+    apiVersion: '2006-03-01',
+    s3ForcePathStyle: true
+};
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html
 const s3: AWS.S3 = new AWS.S3(s3Config);
@@ -82,6 +83,8 @@ export const echo: APIGatewayProxyHandler = async (
     logger.info('Received api gateway event ', event);
 
     // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs
+    // TODO the get url returns localhost even in the lambda
+    // https://github.com/localstack/localstack/issues/3562
     try {
         const sqsUrlParams: SQS.Types.GetQueueUrlRequest = {
             QueueName: queueName,
@@ -104,7 +107,7 @@ export const echo: APIGatewayProxyHandler = async (
 
             logger.info('post to sqs success', result);
         } else {
-            logger.info('failed to get endpoint for ' + queueName);
+            logger.error('failed to get endpoint for ' + queueName);
         }
     } catch (err) {
         logger.error('failed to post to sqs', err);
@@ -159,10 +162,9 @@ export const record: SQSHandler = async (
     }); 
 }
 
-
-
 /**
  * S3 event handler
+ * https://aws.amazon.com/premiumsupport/knowledge-center/lambda-configure-s3-event-notification/
  * see https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html
  * @param event see https://docs.aws.amazon.com/lambda/latest/dg/with-s3.html
  * @param context see https://docs.aws.amazon.com/lambda/latest/dg/nodejs-context.html

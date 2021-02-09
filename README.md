@@ -32,7 +32,8 @@
 # project structure
 - [handler class](https://github.com/tim-oe/node-101/blob/main/src/functions/handler.ts)
     - echo: dumps request into sqs
-    - record: dupes sqs message to persistance store (TBD)
+    - record: dupes sqs message to s3 bucket
+    - archive: post file content to mongo collection (TBD)
 # commands
 - deploy >> `serverless deploy --stage local --region us-west-2`
 - list apigateway >> `awslocal apigateway get-rest-apis`
@@ -47,3 +48,9 @@
     - replace XXX with endpoint hash displayed as part of successful deploy
 # FAQ
 - [debugging with vsCode](https://code.visualstudio.com/docs/editor/debugging)
+
+# TODOs
+- add mongo persistence 
+- leverage secrets for mongo credentials
+- reorge code to be better OO
+- deploy and verify functionality against aws.
