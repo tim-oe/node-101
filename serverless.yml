@@ -1,21 +1,7 @@
 # https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/?rd=true
-# Welcome to Serverless!
-#
-# This file is the main config file for your service.
-# It's very minimal at this point and uses default values.
-# You can always add more config options for more control.
-# We've included some commented out config examples here.
-# Just uncomment any of them to get that config option.
-#
-# For full config options, check the docs:
-#    docs.serverless.com
-#
-# Happy Coding!
-
 service: node-101
-# app and org for use with dashboard.serverless.com
-# app: none-101
-# org: tec.org
+app: none-101
+org: tec.org
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
@@ -28,10 +14,13 @@ provider:
   logRetentionInDays: 14
   region: us-west-2
   deploymentPrefix: aws-lambda
-  # very important, deployment wont fail but execution wiil without this
-  deploymentBucket: # when using localstack its important that before you deploy your lambda your s3 bucket already exists you can do this automatically via adding your aws cli create bucket commands to the localstack-entrypoint.sh script
+  # very important, deployment wont fail but execution without this
+  # when using localstack its important that before you deploy your 
+  # lambda your s3 bucket already exists you can do this automatically 
+  # via adding your aws cli create bucket commands to the 
+  # localstack-entrypoint.sh script
+  deploymentBucket: 
     name: ${self:service}-${opt:stage}-deploy
-
 
 # https://medium.com/manomano-tech/using-serverless-framework-localstack-to-test-your-aws-applications-locally-17748ffe6755
 # https://www.serverless.com/plugins/serverless-localstack
@@ -46,6 +35,9 @@ plugins:
 
 package:
   individually: true
+  include:
+    # include configuration files for config
+    - config/*.json
 
 functions:
   echo:
@@ -58,9 +50,7 @@ functions:
           path: /echo
           method: get
           cors: true          
-    package:
-      include:
-        - src/**/*
+
   record:
     handler: src/functions/handler.record
     runtime: nodejs12.x
@@ -84,6 +74,12 @@ functions:
         existing: true 
 
 custom:
+  # https://www.serverless.com/plugins/serverless-plugin-include-dependencies 
+  includeDependencies:
+    always:
+      # https://github.com/dougmoscrop/serverless-plugin-include-dependencies/issues/46
+      - 'node_modules/config/**'
+  
   region: ${self:provider.region}
   stage: ${opt:stage, self:provider.stage}
   prefix: ${self:custom.stage}-${self:service}

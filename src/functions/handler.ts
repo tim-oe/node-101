@@ -1,10 +1,10 @@
+import config = require('config');
+
 import async = require("async");
 
 import AWS = require('aws-sdk');
-
 import { SQS, S3 } from 'aws-sdk';
 import { ManagedUpload } from "aws-sdk/clients/s3";
-
 import {
     APIGatewayProxyHandler,
     APIGatewayEvent,
@@ -28,16 +28,16 @@ const logger: Logger = winston.createLogger(logConfiguration);
 
 // https://stackoverflow.com/questions/61028751/missing-credentials-in-config-if-using-aws-config-file-set-aws-sdk-load-config
 // TODO this should not be needed
-const config: AWS.Config = new AWS.Config();
-config.credentials = new AWS.Credentials(
+const awsConfig: AWS.Config = new AWS.Config();
+awsConfig.credentials = new AWS.Credentials(
     "test",
     "test"
 );
-config.region = "us-west-2";
+awsConfig.region = "us-west-2";
 
 // need to set creds before creating sqs client
 // https://stackoverflow.com/questions/56152697/could-not-load-credentials-from-any-providers-when-attempting-upload-to-aws-s3
-AWS.config.update(config)
+AWS.config.update(awsConfig)
 
 //TODO should be able to get the url based on name or arn...
 // https://github.com/localstack/localstack/issues/3068
@@ -80,6 +80,7 @@ export const echo: APIGatewayProxyHandler = async (
     context: Context,
     callback: Callback,
 ): Promise<APIGatewayProxyResult> => {
+    logger.info('config', config.get('test'));
     logger.info('Received api gateway event ', event);
 
     // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs
@@ -176,6 +177,6 @@ export const archive: S3Handler = async (
     callback: Callback,
 ): Promise<void> => {
     event.Records.forEach(record => {
-        logger.info('Received s3 record:', JSON.stringify(record));
+        logger.info('Received s3 record:', record);
     });
 }

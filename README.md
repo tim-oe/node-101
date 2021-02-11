@@ -5,6 +5,7 @@
 - [npm](https://docs.npmjs.com/)
 - [typescript](https://www.typescriptlang.org/docs/)
 - [winston](https://github.com/winstonjs/winston)
+- [config](https://www.npmjs.com/package/config)
 - [mongoos](https://mongoosejs.com)
 - [aws-sdk](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest)
 - [jest](https://jestjs.io/)
@@ -20,7 +21,6 @@
 
 - [init project](https://medium.com/@phtnhphan/how-to-setup-typescript-for-nodejs-project-45d42057f7a3)
 - [init typescript](https://khalilstemmler.com/blogs/typescript/node-starter-project/)
-- [init express](https://expressjs.com/en/starter/installing.html)
 - [init winston](https://www.section.io/engineering-education/logging-with-winston/)
 - [init jest](https://jestjs.io/docs/en/getting-started)
 - [init eslint](https://eslint.org/docs/user-guide/getting-started)
