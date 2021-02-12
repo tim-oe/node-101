@@ -2,6 +2,8 @@ import config = require('config');
 
 import async = require("async");
 
+import cookie = require('cookie');
+
 import AWS = require('aws-sdk');
 import { SQS, S3 } from 'aws-sdk';
 import { ManagedUpload } from "aws-sdk/clients/s3";
@@ -23,6 +25,7 @@ import { APIGatewayProxyResultV2 } from "../bean/APIGatewayProxyResultV2";
 import winston = require('winston');
 import { Logger } from 'winston';
 import { logConfiguration } from "../config/logging.config";
+import { CookieSerializeOptions } from 'cookie';
 
 const logger: Logger = winston.createLogger(logConfiguration);
 
@@ -111,8 +114,17 @@ export const echo: APIGatewayProxyHandler = async (
             logger.error('failed to get endpoint for ' + queueName);
         }
     } catch (err) {
-        logger.error('failed to post to sqs', err);
+        logger.error('failed to post to sqs', err, err.stack);
     }
+
+    const expiry: Date = new Date();
+    expiry.setFullYear(expiry.getFullYear() + 1);
+
+    const cookieConfig: CookieSerializeOptions = {
+        maxAge: 60 * 60 * 24 * 365, // 1 yr
+        expires: expiry 
+    };
+    const myCookie: string = cookie.serialize('mycookie', 'chocolateChip', cookieConfig);
 
     const resp: APIGatewayProxyResultV2 = {
         statusCode: 200,
@@ -120,11 +132,8 @@ export const echo: APIGatewayProxyHandler = async (
         // https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
         // https://stackoverflow.com/questions/43190935/setting-http-response-header-from-aws-lambda#43194717
         // https://en.wikipedia.org/wiki/HTTP_cookie#Expires_and_Max-Age
-        //         cookies: ["mycookie=chocolateChip; Max-Age=15552000"
-        // //            ,acookie=fudgestripes; Expires="
-        //         ],
         headers: {
-            "Set-Cookie": "mycookie=chocolateChip; Max-Age=15552000"
+            "Set-Cookie": myCookie
         }
     };
 
@@ -143,7 +152,7 @@ export const record: SQSHandler = async (
     context: Context,
     callback: Callback,
 ): Promise<void> => {
-    logger.info('Received sqs event ', event);
+    logger.info('Received sqs event', event);
 
     await async.eachSeries(event.Records, async function(record: SQSRecord) {
         try {

@@ -6,6 +6,7 @@
 - [typescript](https://www.typescriptlang.org/docs/)
 - [winston](https://github.com/winstonjs/winston)
 - [config](https://www.npmjs.com/package/config)
+- [cookie](https://www.npmjs.com/package/cookie)
 - [mongoos](https://mongoosejs.com)
 - [aws-sdk](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest)
 - [jest](https://jestjs.io/)

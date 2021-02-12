@@ -1,7 +1,7 @@
 # https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/?rd=true
 service: node-101
-app: none-101
-org: tec.org
+#app: none-101
+#org: tec.org
 
 # You can pin your service to only deploy with a specific Serverless version
 # Check out our docs for more details
