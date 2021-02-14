@@ -1,0 +1,81 @@
+plugins {
+    // https://docs.gradle.org/current/userguide/java_plugin.html
+    id 'java'
+
+    id 'org.flywaydb.flyway' version '7.5.3'
+
+    // launch db docker container
+    id "com.avast.gradle.docker-compose" version "0.14.0"
+}
+
+version '1.0.0'
+
+// this needs to be here for global plugin refs
+repositories {
+    mavenCentral()
+    jcenter()
+    maven {
+        url "https://plugins.gradle.org/m2/"
+    }
+}
+
+configurations {
+    db
+}
+
+dependencies {
+    compile group: 'mysql', name: 'mysql-connector-java', version: '8.0.23'
+
+    //to get ant.sql working
+    db group: 'mysql', name: 'mysql-connector-java', version: '8.0.23'
+}
+
+/**
+ * https://github.com/avast/gradle-docker-compose-plugin
+ */
+/*
+dockerCompose {
+    mariadb {
+        useComposeFiles = ['docker-compose.yml']
+    }
+}
+*/
+
+flyway {
+    url = "jdbc:mysql://${db_host}:${db_port}/"
+    user = "${db_username}"
+    password = "${db_password}"
+    schemas = ["test"]
+    locations = ["filesystem:$rootProject.projectDir/sql/releases"]
+    placeholderReplacement = false
+}
+
+/**
+ * task to drop and reload the DB
+ * https://docs.gradle.org/current/userguide/tutorial_using_tasks.html
+ * https://discuss.gradle.org/t/how-to-set-up-the-sql-statement-when-calling-ant-sql-task/5743
+ * need to quote the name to leverage dot notation
+ */
+task dbReset {
+    group = 'db'
+    description 'task to drop and reload the DB'
+    dependsOn flywayClean,flywayMigrate
+
+    doLast {
+        ant.echo("sql url:" + "jdbc:mysql://${db_host}:${db_port}/test")
+        ant.echo("project.gradle.gradleUserHomeDir:" + "$project.gradle.gradleUserHomeDir")
+        ant.echo("rootProject.projectDir:" + "$rootProject.projectDir")
+        ant.echo("url:" + "jdbc:mysql://${db_host}:${db_port}/test")
+
+        ant.sql(classpath: configurations.db.asPath,
+                driver: 'com.mysql.cj.jdbc.Driver',
+                url: "jdbc:mysql://${db_host}:${db_port}/test",
+                userid: "${db_username}",
+                password: "${db_password}",
+                delimiter: ';;',
+                delimitertype: 'normal'
+        ) {
+            transaction(src: "$rootProject.projectDir/sql/sample_data/users.sql")
+        }
+    }
+}

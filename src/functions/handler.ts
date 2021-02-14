@@ -1,33 +1,31 @@
 import config = require('config');
 
-import async = require("async");
-
-import cookie = require('cookie');
-
-import AWS = require('aws-sdk');
-import { SQS, S3 } from 'aws-sdk';
-import { ManagedUpload } from "aws-sdk/clients/s3";
+import AWS, { SQS, S3 } from 'aws-sdk';
 import {
     APIGatewayProxyHandler,
-    APIGatewayEvent,
+    APIGatewayProxyEvent,
     APIGatewayProxyResult,
     Context,
     Callback,
     SQSEvent,
-    SQSRecord,
     SQSHandler,
     S3Event,
     S3Handler
 } from 'aws-lambda';
 
-import { APIGatewayProxyResultV2 } from "../bean/APIGatewayProxyResultV2";
+import SQSSvc from "../svc/aws/SQSSvc";
+import S3Svc  from "../svc/aws/S3Svc";
 
 import winston = require('winston');
 import { Logger } from 'winston';
 import { logConfiguration } from "../config/logging.config";
-import { CookieSerializeOptions } from 'cookie';
+import ResponseSvc from '../svc/ResponseSvc';
 
 const logger: Logger = winston.createLogger(logConfiguration);
+
+//TODO should be able to get the url based on name or arn...
+// https://github.com/localstack/localstack/issues/3068
+const baseUlr: string = 'http://' + process.env.LOCALSTACK_HOSTNAME + ':4566';
 
 // https://stackoverflow.com/questions/61028751/missing-credentials-in-config-if-using-aws-config-file-set-aws-sdk-load-config
 // TODO this should not be needed
@@ -36,17 +34,7 @@ awsConfig.credentials = new AWS.Credentials(
     "test",
     "test"
 );
-awsConfig.region = "us-west-2";
-
-// need to set creds before creating sqs client
-// https://stackoverflow.com/questions/56152697/could-not-load-credentials-from-any-providers-when-attempting-upload-to-aws-s3
-AWS.config.update(awsConfig)
-
-//TODO should be able to get the url based on name or arn...
-// https://github.com/localstack/localstack/issues/3068
-const baseUlr: string = 'http://' + process.env.LOCALSTACK_HOSTNAME + ':4566';
-const accountId = '000000000000';
-const queueName = 'node-101-click';
+awsConfig.region = config.get('aws.region');
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
 // https://github.com/localstack/localstack/issues/948
@@ -55,8 +43,7 @@ const sqsConfig: SQS.Types.ClientConfiguration = {
     apiVersion: '2012-11-05'
 };
 
-// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
-const sqs: AWS.SQS = new AWS.SQS(sqsConfig);
+const sqsSvc: SQSSvc = new SQSSvc(config.get('sqs.queue'), awsConfig, sqsConfig);
 
 // in localstack need to set both endpoint and s3ForcePathStyle
 // https://github.com/localstack/localstack/issues/3566
@@ -66,8 +53,9 @@ const s3Config: S3.Types.ClientConfiguration = {
     s3ForcePathStyle: true
 };
 
-// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html
-const s3: AWS.S3 = new AWS.S3(s3Config);
+const s3svc: S3Svc = new S3Svc(config.get('sqs.queue'), awsConfig, s3Config);
+
+const responseSvc: ResponseSvc = new ResponseSvc();
 
 /**
  * API Gateway event handler
@@ -79,65 +67,13 @@ const s3: AWS.S3 = new AWS.S3(s3Config);
  * @param callback function that will be used to send response
  */
 export const echo: APIGatewayProxyHandler = async (
-    event: APIGatewayEvent,
+    event: APIGatewayProxyEvent,
     context: Context,
     callback: Callback,
 ): Promise<APIGatewayProxyResult> => {
-    logger.info('config', config.get('test'));
     logger.info('Received api gateway event ', event);
-
-    // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs
-    // TODO the get url returns localhost even in the lambda
-    // https://github.com/localstack/localstack/issues/3562
-    try {
-        const sqsUrlParams: SQS.Types.GetQueueUrlRequest = {
-            QueueName: queueName,
-            QueueOwnerAWSAccountId: accountId
-        };
-
-        const queueUrlResult: SQS.Types.GetQueueUrlResult = await sqs.getQueueUrl(sqsUrlParams).promise(); // since your handler returns a promise, lambda will only resolve after sqs responded with either failure or success
-
-        if (queueUrlResult.QueueUrl) {
-            logger.info('sqs: endpoint ' + queueUrlResult.QueueUrl);
-
-            const request: SQS.Types.SendMessageRequest = {
-                MessageBody: JSON.stringify(event),
-                //QueueUrl: queueUrlResult.QueueUrl,
-                QueueUrl: `${baseUlr}/${accountId}/${queueName}`,
-                DelaySeconds: 0
-            };
-
-            const result: SQS.Types.SendMessageResult = await sqs.sendMessage(request).promise(); // since your handler returns a promise, lambda will only resolve after sqs responded with either failure or success
-
-            logger.info('post to sqs success', result);
-        } else {
-            logger.error('failed to get endpoint for ' + queueName);
-        }
-    } catch (err) {
-        logger.error('failed to post to sqs', err, err.stack);
-    }
-
-    const expiry: Date = new Date();
-    expiry.setFullYear(expiry.getFullYear() + 1);
-
-    const cookieConfig: CookieSerializeOptions = {
-        maxAge: 60 * 60 * 24 * 365, // 1 yr
-        expires: expiry 
-    };
-    const myCookie: string = cookie.serialize('mycookie', 'chocolateChip', cookieConfig);
-
-    const resp: APIGatewayProxyResultV2 = {
-        statusCode: 200,
-        body: JSON.stringify(event),
-        // https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html
-        // https://stackoverflow.com/questions/43190935/setting-http-response-header-from-aws-lambda#43194717
-        // https://en.wikipedia.org/wiki/HTTP_cookie#Expires_and_Max-Age
-        headers: {
-            "Set-Cookie": myCookie
-        }
-    };
-
-    return resp;
+    logger.info('post to sqs success', sqsSvc.post(JSON.stringify(event)));
+    return responseSvc.response(event);
 }
 
 /**
@@ -147,25 +83,19 @@ export const echo: APIGatewayProxyHandler = async (
  * @param context see https://docs.aws.amazon.com/lambda/latest/dg/nodejs-context.html
  * @param callback function that will be used to send response
  */
-export const record: SQSHandler = async (
+export const record: SQSHandler =  (
     event: SQSEvent,
     context: Context,
     callback: Callback,
-): Promise<void> => {
+): void => {
     logger.info('Received sqs event', event);
-
-    await async.eachSeries(event.Records, async function(record: SQSRecord) {
+    event.Records.forEach(record => {
         try {
             const d: Date = new Date();
-            const request: S3.Types.PutObjectRequest = {
-                Bucket: "node-101-archive",
-                Body: Buffer.from(JSON.stringify(record.body), "utf-8"),
-                Key: 'click-' + d.getMilliseconds() + '.json'
-            };
+            const content: Buffer = Buffer.from(JSON.stringify(record.body), "utf-8");
+            const key: string = 'click-' + d.getMilliseconds() + '.json';
     
-            logger.info("uploading to s3 " + request.Key);
-            const data: ManagedUpload.SendData = await s3.upload(request).promise();
-            logger.info("uploaded to s3", data);
+            logger.info("uploaded to s3 " + s3svc.upload(key, content));
         } catch (err) {
             logger.error("error uploading to s3", err, err.stack);
         }
@@ -178,13 +108,13 @@ export const record: SQSHandler = async (
  * see https://docs.aws.amazon.com/AmazonS3/latest/dev/notification-content-structure.html
  * @param event see https://docs.aws.amazon.com/lambda/latest/dg/with-s3.html
  * @param context see https://docs.aws.amazon.com/lambda/latest/dg/nodejs-context.html
- * @param callback function that will be used to send response
+ * @param callback callback function
  */
-export const archive: S3Handler = async (
+export const archive: S3Handler = (
     event: S3Event,
     context: Context,
     callback: Callback,
-): Promise<void> => {
+): void => {
     event.Records.forEach(record => {
         logger.info('Received s3 record:', record);
     });

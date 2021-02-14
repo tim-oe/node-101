@@ -1,0 +1,15 @@
+aws:
+  region: "us-west-2"
+sqs:
+  queue: 'node-101-click'
+s3:
+  bucket: 'node-101-archive'
+db:
+  type: 'mysql'
+  host: 'db'
+  port: 3306
+  database: 'test'
+  synchronize: true
+  logging: true
+  username: 'test'
+  password: 'test'

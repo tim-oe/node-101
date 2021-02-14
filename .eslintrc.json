@@ -1,3 +1,4 @@
+//
 {
     "root": true,
     "parser": "@typescript-eslint/parser",
@@ -10,5 +11,7 @@
       "plugin:@typescript-eslint/recommended"
     ],
     "rules": { 
+      // https://palantir.github.io/tslint/rules/no-inferrable-types/
+      "no-inferrable-types": false
     }
 }
