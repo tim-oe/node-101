@@ -72,7 +72,7 @@ export const echo: APIGatewayProxyHandler = async (
     callback: Callback,
 ): Promise<APIGatewayProxyResult> => {
     logger.info('Received api gateway event ', event);
-    logger.info('post to sqs success', sqsSvc.post(JSON.stringify(event)));
+    logger.info('post to sqs success', await sqsSvc.post(JSON.stringify(event)));
     return responseSvc.response(event);
 }
 
@@ -83,19 +83,19 @@ export const echo: APIGatewayProxyHandler = async (
  * @param context see https://docs.aws.amazon.com/lambda/latest/dg/nodejs-context.html
  * @param callback function that will be used to send response
  */
-export const record: SQSHandler =  (
+export const record: SQSHandler = async (
     event: SQSEvent,
     context: Context,
     callback: Callback,
-): void => {
+): Promise<void> => {
     logger.info('Received sqs event', event);
-    event.Records.forEach(record => {
+    event.Records.forEach(async record => {
         try {
             const d: Date = new Date();
             const content: Buffer = Buffer.from(JSON.stringify(record.body), "utf-8");
             const key: string = 'click-' + d.getMilliseconds() + '.json';
     
-            logger.info("uploaded to s3 " + s3svc.upload(key, content));
+            logger.info("uploaded to s3 ", await s3svc.upload(key, content));
         } catch (err) {
             logger.error("error uploading to s3", err, err.stack);
         }

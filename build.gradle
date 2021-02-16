@@ -75,7 +75,7 @@ task dbReset {
                 delimiter: ';;',
                 delimitertype: 'normal'
         ) {
-            transaction(src: "$rootProject.projectDir/sql/sample_data/users.sql")
+            transaction(src: "$rootProject.projectDir/sql/sample_data/customer.sql")
         }
     }
 }

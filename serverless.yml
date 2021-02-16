@@ -7,6 +7,9 @@ service: node-101
 # Check out our docs for more details
 frameworkVersion: '>=2.0.0 <3.0.0'
 
+# https://www.serverless.com/framework/docs/configuration-validation/
+# configValidationMode: error
+
 provider:
   name: aws
   runtime: nodejs12.x
@@ -37,7 +40,7 @@ package:
   individually: true
   include:
     # include configuration files for config
-    - config/*.json
+    - config/*.yml
 
 functions:
   echo:
@@ -69,9 +72,9 @@ functions:
     memorySize: 256
     events:
       - s3:
-        bucket: node-101-archive
-        event: s3:ObjectCreated:*
-        existing: true 
+          bucket: node-101-archive
+          event: s3:ObjectCreated:*
+          existing: true 
 
 custom:
   # https://www.serverless.com/plugins/serverless-plugin-include-dependencies 

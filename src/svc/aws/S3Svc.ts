@@ -7,8 +7,6 @@ import { ManagedUpload } from "aws-sdk/clients/s3";
 
 import BaseAWSSvc from "./BaseAWSSvc";
 
-import sp from 'synchronized-promise'
-
 // in localstack need to set both endpoint and s3ForcePathStyle
 // https://github.com/localstack/localstack/issues/3566
 const defaultConfig: S3.Types.ClientConfiguration = {
@@ -36,7 +34,7 @@ export default class S3Svc extends BaseAWSSvc {
         }
     }
 
-    public upload = (key: string, content: Buffer): string => {
+    public upload = async (key: string, content: Buffer): Promise<string> => {
     
         const request: S3.Types.PutObjectRequest = {
             Bucket: this.bucket,
@@ -45,7 +43,7 @@ export default class S3Svc extends BaseAWSSvc {
         };
 
         this.logger.info("uploading " + this.bucket + ':' + request.Key);
-        const data: ManagedUpload.SendData =  sp(this.s3.upload(request).promise)();
+        const data: ManagedUpload.SendData =  await this.s3.upload(request).promise();
         this.logger.info("uploaded to s3", data);
 
         return data.Location;
