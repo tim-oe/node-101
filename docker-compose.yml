@@ -21,7 +21,7 @@ services:
       - LAMBDA_EXECUTOR=docker-reuse
       - LAMBDA_REMOTE_DOCKER=true
       - LAMBDA_REMOVE_CONTAINERS=true
-      - LAMBDA_DOCKER_NETWORK=host
+      #- LAMBDA_DOCKER_NETWORK=host
       - KINESIS_ERROR_PROBABILITY=${KINESIS_ERROR_PROBABILITY- }
       - DOCKER_HOST=unix:///var/run/docker.sock
       # DOCKER_CMD="sudo docker"

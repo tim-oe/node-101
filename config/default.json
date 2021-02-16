@@ -1,0 +1,5 @@
+{
+  "aws": { "region": "us-west-2" },
+  "sqs": { "queue": "node-101-click" },
+  "s3": { "bucket": "node-101-archive" }
+}

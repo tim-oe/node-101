@@ -1,13 +1,16 @@
 import config = require('config');
 
+import async = require("async");
+
 import AWS, { SQS, S3 } from 'aws-sdk';
 import {
     APIGatewayProxyHandler,
-    APIGatewayProxyEvent,
+    APIGatewayEvent,
     APIGatewayProxyResult,
     Context,
     Callback,
     SQSEvent,
+    SQSRecord,
     SQSHandler,
     S3Event,
     S3Handler
@@ -53,7 +56,7 @@ const s3Config: S3.Types.ClientConfiguration = {
     s3ForcePathStyle: true
 };
 
-const s3svc: S3Svc = new S3Svc(config.get('sqs.queue'), awsConfig, s3Config);
+const s3svc: S3Svc = new S3Svc(config.get('s3.bucket'), awsConfig, s3Config);
 
 const responseSvc: ResponseSvc = new ResponseSvc();
 
@@ -67,12 +70,16 @@ const responseSvc: ResponseSvc = new ResponseSvc();
  * @param callback function that will be used to send response
  */
 export const echo: APIGatewayProxyHandler = async (
-    event: APIGatewayProxyEvent,
+    event: APIGatewayEvent,
     context: Context,
     callback: Callback,
 ): Promise<APIGatewayProxyResult> => {
     logger.info('Received api gateway event ', event);
-    logger.info('post to sqs success', await sqsSvc.post(JSON.stringify(event)));
+    try {
+        logger.info('post to sqs success', await sqsSvc.post(JSON.stringify(event)));
+    } catch (err) {
+        logger.error("error posting to sqs", err);
+    }
     return responseSvc.response(event);
 }
 
@@ -89,7 +96,7 @@ export const record: SQSHandler = async (
     callback: Callback,
 ): Promise<void> => {
     logger.info('Received sqs event', event);
-    event.Records.forEach(async record => {
+    await async.eachSeries(event.Records, async function(record: SQSRecord) {
         try {
             const d: Date = new Date();
             const content: Buffer = Buffer.from(JSON.stringify(record.body), "utf-8");
@@ -97,7 +104,7 @@ export const record: SQSHandler = async (
     
             logger.info("uploaded to s3 ", await s3svc.upload(key, content));
         } catch (err) {
-            logger.error("error uploading to s3", err, err.stack);
+            logger.error("error uploading to s3", err);
         }
     }); 
 }

@@ -8,13 +8,16 @@ import BaseAWSSvc from "./BaseAWSSvc";
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
 // https://github.com/localstack/localstack/issues/948
 const defaultConfig: SQS.Types.ClientConfiguration = {apiVersion: '2012-11-05'};
+const unsetQueue: string = 'unset';
+//TODO localstack specific...
+const baseUlr: string = 'http://' + process.env.LOCALSTACK_HOSTNAME + ':4566/000000000000/';
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
 export default class SQSSvc extends BaseAWSSvc {
 
     protected sqs: SQS;
     protected queueName: string;
-    protected queueUrl: string = "unset";
+    protected queueUrl: string = unsetQueue;
     public constructor(
         queueName: string, 
         awsConfig: Config, 
@@ -22,7 +25,7 @@ export default class SQSSvc extends BaseAWSSvc {
         super(awsConfig);
         
         this.queueName = queueName;
-
+        
         if(sqsConfig){
             this.sqs = new this.AWS.SQS(sqsConfig);
         } else {
@@ -34,14 +37,17 @@ export default class SQSSvc extends BaseAWSSvc {
     // TODO the get url returns localhost even in the lambda
     // https://github.com/localstack/localstack/issues/3562
     protected  getQueueUrl =  async (): Promise<string> => {
-        if(!this.queueUrl){
+        if(this.queueUrl === unsetQueue){
             const sqsUrlParams: SQS.Types.GetQueueUrlRequest = {QueueName: this.queueName};
 
             const queueUrlResult: SQS.Types.GetQueueUrlResult = await this.sqs.getQueueUrl(sqsUrlParams).promise()
 
             if (queueUrlResult.QueueUrl) {
                 this.logger.info('sqs: endpoint ' + queueUrlResult.QueueUrl);
-                this.queueUrl = queueUrlResult.QueueUrl;
+                //TODO not working in localstack...
+                //this.queueUrl = queueUrlResult.QueueUrl;
+                this.queueUrl = baseUlr + this.queueName;
+
             } else {
                 throw new Error('failed to get url for ' + this.queueName);
             }
