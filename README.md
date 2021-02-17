@@ -1,14 +1,21 @@
-# node.js aws sample project 
+# node.js aws lambda sample project 
 
+this project is a learning experience in progress. The goal is to learn node.js as it
+pertains to aws development.
+
+## tech stack
 - [vs code](https://code.visualstudio.com/)
 - [node.js](https://nodejs.org/en/docs/guides/getting-started-guide/)
 - [npm](https://docs.npmjs.com/)
 - [typescript](https://www.typescriptlang.org/docs/)
-- [winston](https://github.com/winstonjs/winston)
+- [async](https://www.npmjs.com/package/async)
+- [aws-sdk](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest)
+- [aws-lambda](https://www.npmjs.com/package/aws-lambda)
 - [config](https://www.npmjs.com/package/config)
 - [cookie](https://www.npmjs.com/package/cookie)
-- [mongoos](https://mongoosejs.com)
-- [aws-sdk](https://docs.aws.amazon.com/AWSJavaScriptSDK/latest)
+- [typeorm](https://www.npmjs.com/package/typeorm)
+- [urlsafe-base64](https://www.npmjs.com/package/urlsafe-base64])
+- [winston](https://github.com/winstonjs/winston)
 - [jest](https://jestjs.io/)
 - [eslint](https://eslint.org/docs/developer-guide/nodejs-api)
 - [jsDoc](https://www.npmjs.com/package/jsdoc)
@@ -16,42 +23,42 @@
 - [serverless.yml](https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml/?rd=true)
 - [serverless plugins](https://www.serverless.com/plugins/)
 - [serverless localstack](https://github.com/localstack/serverless-localstack)
-- [localstack](https://github.com/localstack/localstack)
+- [localstack container](https://github.com/localstack/localstack)
 
-# project setup, see [commands.sh](https://github.com/tim-oe/node-101/blob/main/commands.sh)
-
-- [init project](https://medium.com/@phtnhphan/how-to-setup-typescript-for-nodejs-project-45d42057f7a3)
-- [init typescript](https://khalilstemmler.com/blogs/typescript/node-starter-project/)
-- [init winston](https://www.section.io/engineering-education/logging-with-winston/)
-- [init jest](https://jestjs.io/docs/en/getting-started)
-- [init eslint](https://eslint.org/docs/user-guide/getting-started)
+## project setup
+- [commands.sh](https://github.com/tim-oe/node-101/blob/main/commands.sh)
 - [gitignore](https://philna.sh/blog/2019/01/10/how-to-start-a-node-js-project/)
-- [init jsdoc](https://medium.com/swlh/creating-better-jsdoc-documentation-8b7a65744dcb)
 - [init serverless](https://www.serverless.com/framework/docs/getting-started/)
 - [init localstack](https://medium.com/manomano-tech/using-serverless-framework-localstack-to-test-your-aws-applications-locally-17748ffe6755)
 
-# project structure
+## initialize database
+- using gradle: ```gradle dbReset```
+- leverages [flyway](https://flywaydb.org/documentation/)
+
+## project functionality
 - [handler class](https://github.com/tim-oe/node-101/blob/main/src/functions/handler.ts)
-    - echo: dumps request into sqs
-    - record: dupes sqs message to s3 bucket
-    - archive: post file content to mongo collection (TBD)
-# commands
+    - echo [api gateway event](https://docs.aws.amazon.com/lambda/latest/dg/services-apigateway.html): dumps request into sqs, looks up custid in path
+    - record [SQS event](https://docs.aws.amazon.com/lambda/latest/dg/with-sqs.html): dumps sqs message to s3 bucket
+    - archive [S3 event](https://docs.aws.amazon.com/lambda/latest/dg/with-s3.html): s3 even -> post to mongo TDB
+## usefull commands
 - deploy >> `serverless deploy --stage local --region us-west-2`
 - list apigateway >> `awslocal apigateway get-rest-apis`
 - list apigateway resources >> `awslocal apigateway get-resources --rest-api-id <id>`
 - list lambda functions >> `awslocal lambda list-functions`
 - list logs >> `aws --endpoint-url http://localhost:4566 logs describe-log-groups`
-- tail lambda logs (aws cli v2) >> `aws --endpoint-url=http://localhost:4566 logs tail <logGroupName> --follow`
+- tail lambda logs (requires aws cli v2) >> `aws --endpoint-url=http://localhost:4566 logs tail <logGroupName> --follow`
 - list bucket contents >> `awslocal s3api list-objects --bucket <bucket name>`
 
-# execute api gateway lambda
-- `curl -v -i  http://localhost:4566/restapis/XXX/local/_user_request_/echo`
-    - replace XXX with endpoint hash displayed as part of successful deploy
-# FAQ
+## execute api gateway lambda
+- `curl -v -i  http://localhost:4566/restapis/XXX/local/_user_request_/echo/custid`
+    - replace ```XXX``` with endpoint hash displayed as part of successful deploy
+    - replace ```custid``` with a customer.id from database
+## FAQ
+- see copious links wthin the code for solving issues encountered
 - [debugging with vsCode](https://code.visualstudio.com/docs/editor/debugging)
 
-# TODOs
+## TODOs
 - add mongo persistence 
-- leverage secrets for mongo credentials
-- reorge code to be better OO
+- leverage secrets for credentials
+- jsdoc
 - deploy and verify functionality against aws.

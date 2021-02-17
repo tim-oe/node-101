@@ -1,4 +1,5 @@
 !bin/sh
+# series of commands that were used to add libs and config the prokect
 # basic node init
 npm init -y
 # generate ignore file
@@ -7,10 +8,8 @@ npx gitignore node
 npm i -D typescript @types/node ts-node nodemon tsconfig-paths
 # tsconfig
 npx tsc --init --rootDir src --outDir build --esModuleInterop --resolveJsonModule --lib es6 --module commonjs --allowJs true --noImplicitAny true
-# mongodb lib
-npm i mongoose
-# winston logger
-npm i winston
+# lib dependencies
+npm i async config cookie mysql typeorm urlsafe-base64 winston
 # aws sdk libs
 npm i aws-sdk aws-lambda
 npm i -D @types/aws-lambda
@@ -31,11 +30,6 @@ sudo npm install -g serverless
 # initialize serverless (follow prompts)
 serverless
 # serverless plugins
-npm i -D serverless-localstack serverless-plugin-typescript serverless-plugin-include-dependencies serverless-plugin-include-dependencies serverless-plugin-common-excludes
+npm i -D serverless-localstack serverless-plugin-typescript serverless-plugin-include-dependencies serverless-plugin-common-excludes
 # create docker network
 docker network create shared
-# deployment s3 bucket
-awslocal s3api create-bucket --bucket node-101-local-deploy
-awslocal s3api put-bucket-acl --bucket node-101-local-deploy --acl public-read
-# deploy lambda
-serverless deploy --stage local --profile localstack --region us-west-2
