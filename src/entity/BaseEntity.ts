@@ -13,6 +13,6 @@ export default class BaseEntity<T> {
     @Column({name:'created_on'})
     createdOn: Date = new Date();
 
-    @Column({name:'last_update'})
+    @Column({name:'last_updated'})
     lastUpdated: Date = new Date();
 }

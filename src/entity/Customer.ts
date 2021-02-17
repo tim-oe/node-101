@@ -7,10 +7,10 @@ import BaseEntity from "./BaseEntity";
 export default class Customer extends BaseEntity<Customer> {
 
     @Column({name:'enabled', length:64, nullable: false})
-    email: string;
+    email!: string;
 
     @Column({name:'password', length:64})
-    password: string;
+    password!: string;
 
     @Column({name:'enabled',nullable: false})
     enabled: boolean = true;

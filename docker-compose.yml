@@ -21,8 +21,8 @@ services:
       - LAMBDA_EXECUTOR=docker-reuse
       - LAMBDA_REMOTE_DOCKER=true
       - LAMBDA_REMOVE_CONTAINERS=true
-      #- LAMBDA_DOCKER_NETWORK=host
-      - KINESIS_ERROR_PROBABILITY=${KINESIS_ERROR_PROBABILITY- }
+      - LAMBDA_DOCKER_NETWORK=shared
+      - HOSTNAME_EXTERNAL=localstack
       - DOCKER_HOST=unix:///var/run/docker.sock
       # DOCKER_CMD="sudo docker"
       # Use these if mounting from local drive in serverless.yml
@@ -56,3 +56,8 @@ services:
       interval: 1m30s
       timeout: 60s
       retries: 6
+
+networks:
+  default:
+    external:
+      name: shared

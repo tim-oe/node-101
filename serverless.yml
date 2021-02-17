@@ -50,7 +50,7 @@ functions:
     memorySize: 256
     events:
       - http:
-          path: /echo
+          path: /echo/{custid}
           method: get
           cors: true          
 
@@ -82,6 +82,7 @@ custom:
     always:
       # https://github.com/dougmoscrop/serverless-plugin-include-dependencies/issues/46
       - 'node_modules/config/**'
+      - 'node_modules/mysql/**'
   
   region: ${self:provider.region}
   stage: ${opt:stage, self:provider.stage}

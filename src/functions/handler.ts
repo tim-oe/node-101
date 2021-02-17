@@ -16,6 +16,8 @@ import {
     S3Handler
 } from 'aws-lambda';
 
+import CustomerSvc from "../svc/CustomerSvc";
+
 import SQSSvc from "../svc/aws/SQSSvc";
 import S3Svc  from "../svc/aws/S3Svc";
 
@@ -23,6 +25,7 @@ import winston = require('winston');
 import { Logger } from 'winston';
 import { logConfiguration } from "../config/logging.config";
 import ResponseSvc from '../svc/ResponseSvc';
+import Customer from '../entity/Customer';
 
 const logger: Logger = winston.createLogger(logConfiguration);
 
@@ -58,6 +61,7 @@ const s3Config: S3.Types.ClientConfiguration = {
 
 const s3svc: S3Svc = new S3Svc(config.get('s3.bucket'), awsConfig, s3Config);
 
+const customerSvc: CustomerSvc = new CustomerSvc();
 const responseSvc: ResponseSvc = new ResponseSvc();
 
 /**
@@ -76,7 +80,12 @@ export const echo: APIGatewayProxyHandler = async (
 ): Promise<APIGatewayProxyResult> => {
     logger.info('Received api gateway event ', event);
     try {
-        logger.info('post to sqs success', await sqsSvc.post(JSON.stringify(event)));
+        logger.info('post to sqs success ' + await sqsSvc.post(JSON.stringify(event)));
+        
+        if(event.pathParameters && event.pathParameters['custid']) {
+            const customer = await customerSvc.getUser(parseInt(event.pathParameters['custid']))
+            logger.info('found customer', customer);
+        }
     } catch (err) {
         logger.error("error posting to sqs", err);
     }
