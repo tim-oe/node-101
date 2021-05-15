@@ -9,7 +9,6 @@
     "database": "test",
     "synchronize": true,
     "logging": true,
-    "username": "test",
-    "password": "test"
+    "secretId": "dev/node-101/db"
   }
 }

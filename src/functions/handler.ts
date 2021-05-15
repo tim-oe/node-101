@@ -1,8 +1,6 @@
-import config = require('config');
 
 import async = require("async");
 
-import AWS, { SQS, S3 } from 'aws-sdk';
 import {
     APIGatewayProxyHandler,
     APIGatewayEvent,
@@ -16,53 +14,18 @@ import {
     S3Handler
 } from 'aws-lambda';
 
-import CustomerSvc from "../svc/CustomerSvc";
-
-import SQSSvc from "../svc/aws/SQSSvc";
-import S3Svc  from "../svc/aws/S3Svc";
+import { 
+    customerSvc, 
+    responseSvc, 
+    achiveBucketSvc, 
+    clickQueueSvc 
+} from "../config/app.config";
 
 import winston = require('winston');
 import { Logger } from 'winston';
 import { logConfiguration } from "../config/logging.config";
-import ResponseSvc from '../svc/ResponseSvc';
-import Customer from '../entity/Customer';
 
 const logger: Logger = winston.createLogger(logConfiguration);
-
-//TODO should be able to get the url based on name or arn...
-// https://github.com/localstack/localstack/issues/3068
-const baseUlr: string = 'http://' + process.env.LOCALSTACK_HOSTNAME + ':4566';
-
-// https://stackoverflow.com/questions/61028751/missing-credentials-in-config-if-using-aws-config-file-set-aws-sdk-load-config
-// TODO this should not be needed
-const awsConfig: AWS.Config = new AWS.Config();
-awsConfig.credentials = new AWS.Credentials(
-    "test",
-    "test"
-);
-awsConfig.region = config.get('aws.region');
-
-// https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
-// https://github.com/localstack/localstack/issues/948
-const sqsConfig: SQS.Types.ClientConfiguration = {
-    endpoint: baseUlr,
-    apiVersion: '2012-11-05'
-};
-
-const sqsSvc: SQSSvc = new SQSSvc(config.get('sqs.queue'), awsConfig, sqsConfig);
-
-// in localstack need to set both endpoint and s3ForcePathStyle
-// https://github.com/localstack/localstack/issues/3566
-const s3Config: S3.Types.ClientConfiguration = {
-    endpoint: baseUlr,
-    apiVersion: '2006-03-01',
-    s3ForcePathStyle: true
-};
-
-const s3svc: S3Svc = new S3Svc(config.get('s3.bucket'), awsConfig, s3Config);
-
-const customerSvc: CustomerSvc = new CustomerSvc();
-const responseSvc: ResponseSvc = new ResponseSvc();
 
 /**
  * API Gateway event handler
@@ -76,20 +39,20 @@ const responseSvc: ResponseSvc = new ResponseSvc();
 export const echo: APIGatewayProxyHandler = async (
     event: APIGatewayEvent,
     context: Context,
-    callback: Callback,
+    callback: Callback
 ): Promise<APIGatewayProxyResult> => {
     logger.info('Received api gateway event ', event);
     try {
-        logger.info('post to sqs success ' + await sqsSvc.post(JSON.stringify(event)));
+        logger.info('post to sqs success ' + await clickQueueSvc().post(JSON.stringify(event)));
         
         if(event.pathParameters && event.pathParameters['custid']) {
-            const customer = await customerSvc.getUser(parseInt(event.pathParameters['custid']))
+            const customer = await customerSvc().getUser(parseInt(event.pathParameters['custid']))
             logger.info('found customer', customer);
         }
     } catch (err) {
         logger.error("error posting to sqs", err);
     }
-    return responseSvc.response(event);
+    return responseSvc().response(event);
 }
 
 /**
@@ -102,7 +65,7 @@ export const echo: APIGatewayProxyHandler = async (
 export const record: SQSHandler = async (
     event: SQSEvent,
     context: Context,
-    callback: Callback,
+    callback: Callback
 ): Promise<void> => {
     logger.info('Received sqs event', event);
     await async.eachSeries(event.Records, async function(record: SQSRecord) {
@@ -111,7 +74,7 @@ export const record: SQSHandler = async (
             const content: Buffer = Buffer.from(JSON.stringify(record.body), "utf-8");
             const key: string = 'click-' + d.getMilliseconds() + '.json';
     
-            logger.info("uploaded to s3 ", await s3svc.upload(key, content));
+            logger.info("uploaded to s3 ", await achiveBucketSvc().upload(key, content));
         } catch (err) {
             logger.error("error uploading to s3", err);
         }
@@ -129,7 +92,7 @@ export const record: SQSHandler = async (
 export const archive: S3Handler = (
     event: S3Event,
     context: Context,
-    callback: Callback,
+    callback: Callback
 ): void => {
     event.Records.forEach(record => {
         logger.info('Received s3 record:', record);

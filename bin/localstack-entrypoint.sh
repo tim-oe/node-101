@@ -4,11 +4,9 @@
 
 printf "Configuring localstack components...\n"
 
-printf "aws creds\n"
 aws configure set aws_access_key_id test
 aws configure set aws_secret_access_key test
 
-printf "aws conf\n"
 echo "[default]" > ~/.aws/config
 echo "region = us-west-2" >> ~/.aws/config
 echo "output = json" >> ~/.aws/config
@@ -27,15 +25,21 @@ printf "\n\n"
 awslocal s3api create-bucket --bucket node-101-archive
 # TODO figure right perms
 awslocal s3api put-bucket-acl --bucket node-101-archive --acl public-read
-#setup events
+# s3 event registration
 awslocal s3api put-bucket-notification-configuration --bucket node-101-archive --notification-configuration '{"LambdaFunctionConfigurations": [{"LambdaFunctionArn": "arn:aws:lambda:us-west-2:000000000000:function:node-101-local-archive","Events": ["s3:ObjectCreated:*"]}]}'
 awslocal s3api get-bucket-notification-configuration --bucket node-101-archive
 
 printf "\n\n"
 awslocal s3api list-buckets
 
-printf "aws sqs\n"
+printf "\n\n"
+# sqs queue gateway event
 awslocal sqs create-queue --queue-name node-101-click
 
-printf "localstack configuration complete\n"
-# TODO secrets manager for creds
+printf "\n\n"
+# db secret
+awslocal secretsmanager create-secret --name dev/node-101/db \
+    --description "db credentials" \
+    --secret-string '{"username": "test","password": "test"}'
+
+printf "\n\nlocalstack configuration complete\n"

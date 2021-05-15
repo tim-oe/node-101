@@ -3,14 +3,12 @@ import {
     SQS 
 } from 'aws-sdk';
 
-import BaseAWSSvc from "./BaseAWSSvc";
+import BaseAWSSvc, { baseUrl } from "./BaseAWSSvc";
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
 // https://github.com/localstack/localstack/issues/948
 const defaultConfig: SQS.Types.ClientConfiguration = {apiVersion: '2012-11-05'};
 const unsetQueue: string = 'unset';
-//TODO localstack specific...
-const baseUlr: string = 'http://' + process.env.LOCALSTACK_HOSTNAME + ':4566/000000000000/';
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
 export default class SQSSvc extends BaseAWSSvc {
@@ -46,7 +44,7 @@ export default class SQSSvc extends BaseAWSSvc {
                 this.logger.info('sqs: endpoint ' + queueUrlResult.QueueUrl);
                 //TODO not working in localstack...
                 //this.queueUrl = queueUrlResult.QueueUrl;
-                this.queueUrl = baseUlr + this.queueName;
+                this.queueUrl = baseUrl + this.queueName;
 
             } else {
                 throw new Error('failed to get url for ' + this.queueName);

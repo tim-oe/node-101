@@ -4,6 +4,10 @@ import { logConfiguration } from "../../config/logging.config";
 
 import { Config } from 'aws-sdk';
 
+//TODO localstack specific...
+const baseUrl: string  = 'http://' + process.env.LOCALSTACK_HOSTNAME + ':4566/000000000000/';
+export {baseUrl} ;
+
 export default class BaseAWSSvc {
 
     protected AWS = require('aws-sdk');

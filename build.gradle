@@ -79,3 +79,28 @@ task dbReset {
         }
     }
 }
+
+task cleanup {
+    doLast {
+        exec {
+            workingDir '.'
+            commandLine 'docker','system','prune','-a','-f'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'sudo','rm','-fR','data'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'sudo','rm','-fR','mysql'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'sudo','rm','-fR','.serverless'
+        }
+        exec {
+            workingDir '.'
+            commandLine 'sudo','rm','-fR','.build'
+        }
+    }
+}
