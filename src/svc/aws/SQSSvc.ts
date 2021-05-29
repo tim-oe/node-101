@@ -29,17 +29,14 @@ export default class SQSSvc extends BaseAWSSvc {
     } else {
       throw Error("queue is not in config");
     }
-    if (this.configService.get<boolean>("aws.localstack")) {
-      // https://stackoverflow.com/questions/61028751/missing-credentials-in-config-if-using-aws-config-file-set-aws-sdk-load-config
-      // TODO this is localstack only
-      const sqsConfig: SQS.Types.ClientConfiguration = {
-        endpoint: this.baseUrl,
-        apiVersion: "2012-11-05",
-      };
-      this.sqs = new AWS.SQS(sqsConfig);
-    } else {
-      this.sqs = new AWS.SQS(defaultConfig);
+
+    if(this.baseUrl) {
+      defaultConfig.endpoint = this.baseUrl;
     }
+
+    this.logger.debug("sqs config " + JSON.stringify(defaultConfig));
+
+    this.sqs = new AWS.SQS(defaultConfig);
   }
 
   // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs

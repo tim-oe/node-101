@@ -1,7 +1,6 @@
 cookie: "tag-your-it"
 aws:
   localstack: true
-  endpoint: "http://localhost:4566/"
   region: "us-west-2"
   sqs:
     queue: "node-101-click"
@@ -9,7 +8,7 @@ aws:
     bucket: "node-101-archive"
 db:
   type: 'mysql'
-  host: 'localhost'
+  host: 'db'
   port: 3306
   database: 'test'
   synchronize: true

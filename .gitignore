@@ -11,3 +11,4 @@ reports/
 .serverless/
 .vscode/
 
+package-lock.json

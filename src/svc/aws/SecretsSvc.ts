@@ -16,6 +16,12 @@ export default class SecretsSvc extends BaseAWSSvc {
   public constructor(protected configService: ConfigService) {
     super(configService);
 
+    if(this.baseUrl) {
+      defaultConfig.endpoint = this.baseUrl;
+    }
+
+    this.logger.debug("secrets config " + JSON.stringify(defaultConfig));
+
     this.secretsmanager = new this.AWS.SecretsManager(defaultConfig);
   }
 
@@ -29,13 +35,13 @@ export default class SecretsSvc extends BaseAWSSvc {
         await this.secretsmanager.getSecretValue(request).promise();
 
       if (resp && resp.SecretString) {
-        this.logger.debug(id + "=>" + JSON.stringify(resp));
+        this.logger.debug("got secret: " + id);
         return resp.SecretString;
       } else {
-        throw new Error("failed to get secret " + id);
+        throw new Error("no data returned for secret " + id);
       }
     } catch (err) {
-      this.logger.error("failed to get secret " + id, err.stack);
+      this.logger.error("failed to get secret " + id + '\n' + JSON.stringify(err), err.stack);
       throw new Error("failed to get secret " + id);
     }
   };

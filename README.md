@@ -59,6 +59,5 @@ pertains to aws development.
 
 ## TODOs
 - add mongo persistence 
-- leverage secrets for credentials
 - jsdoc
 - deploy and verify functionality against aws.

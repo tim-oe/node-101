@@ -6,6 +6,10 @@ import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import SecretsSvc from "./aws/SecretsSvc";
 
+interface EncrptionConfig {
+  secret: string;
+}
+
 @Injectable()
 export default class EncryptionSvc implements OnModuleInit {
   protected static readonly AES_IV_LENGTH: number = 16;
@@ -25,13 +29,19 @@ export default class EncryptionSvc implements OnModuleInit {
   
     async onModuleInit(): Promise<void> {
     // TODO get secret from secrets 
-    const secret = this.configService.get<string>("encryption.secret");
+    const configKey = this.configService.get<string>("encryption.config");
 
-    if (!secret) {
+    if (!configKey) {
+      throw Error("config key not set!");
+    }
+
+    const config: EncrptionConfig = JSON.parse(await this.secretsSvc.get(configKey));
+
+    if (!config) {
       throw Error("secret not set!");
     }
 
-    let hash = crypto.createHash(EncryptionSvc.DIGEST).update(secret).digest();
+    let hash = crypto.createHash(EncryptionSvc.DIGEST).update(config.secret).digest();
 
     hash = hash.subarray(0, EncryptionSvc.AES_KEY_LENGTH);
     this.logger.debug(" secret hash " + hash.toString("hex"));

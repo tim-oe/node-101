@@ -15,7 +15,7 @@ export default abstract class BaseAWSSvc {
   public constructor(protected configService: ConfigService) {
     const config: Config = new Config();
 
-    // need to set creds before creating sqs client
+    // localstack isn't reading creds from config file
     // https://stackoverflow.com/questions/56152697/could-not-load-credentials-from-any-providers-when-attempting-upload-to-aws-s3
     if (this.configService.get<boolean>("aws.localstack")) {
       this.baseUrl =
@@ -23,7 +23,16 @@ export default abstract class BaseAWSSvc {
       config.credentials = new Credentials("localstack", "localstack");
     }
 
+    const endpoint = this.configService.get<string>("aws.endpoint")
+
+    if(endpoint) {
+      this.baseUrl = endpoint;
+    }
+
     config.region = this.configService.get("aws.region");
+
+    this.logger.debug("aws config " + JSON.stringify(config));
+
     AWS.config.update(config);
   }
 }
