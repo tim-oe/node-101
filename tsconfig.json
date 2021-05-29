@@ -1,19 +1,21 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
     "lib": ["es6"],
-    "allowJs": true,
+    "removeComments": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "sourceMap": true,
-    "outDir": "build",
-    "rootDir": "src",
-    "strict": true,
-    "noImplicitAny": true,
-    "esModuleInterop": true,
+    "target": "es6",
+    "allowSyntheticDefaultImports": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
-  }
+    "outDir": "lib"
+  },
+  "exclude": [
+    "node_modules/**/*",
+    ".serverless/**/*",
+    ".vscode/**/*"
+  ]
 }

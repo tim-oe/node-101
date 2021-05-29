@@ -1,31 +1,54 @@
-
-import async = require("async");
-
 import {
-    APIGatewayProxyHandler,
-    APIGatewayEvent,
-    APIGatewayProxyResult,
-    Context,
-    Callback,
-    SQSEvent,
-    SQSRecord,
-    SQSHandler,
-    S3Event,
-    S3Handler
-} from 'aws-lambda';
+  APIGatewayProxyHandler,
+  APIGatewayEvent,
+  APIGatewayProxyResult,
+  Context,
+  Callback,
+  SQSEvent,
+  SQSRecord,
+  SQSHandler,
+  S3Event,
+  S3Handler,
+} from "aws-lambda";
 
-import { 
-    customerSvc, 
-    responseSvc, 
-    achiveBucketSvc, 
-    clickQueueSvc 
-} from "../config/app.config";
+import { INestApplicationContext, Logger } from "@nestjs/common";
+import { NestFactory } from "@nestjs/core";
+import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 
-import winston = require('winston');
-import { Logger } from 'winston';
-import { logConfiguration } from "../config/logging.config";
+import { AppModule } from "../config/app.module";
+import SQSSvc from "../svc/aws/SQSSvc";
+import CustomerSvc from "../svc/dao/CustomerSvc";
+import ResponseSvc from "../svc/ResponseSvc";
+import S3Svc from "../svc/aws/S3Svc";
 
-const logger: Logger = winston.createLogger(logConfiguration);
+import * as async from "async";
+
+let app: INestApplicationContext;
+let logger: Logger;
+
+/**
+ * Re-use the application context across function invocations
+ * https://dev.to/sebastianschlecht/serverless-nest-js-micro-services-integrations-without-http-ikk
+ */
+async function bootstrap(): Promise<void> {
+  if (!app) {
+    app = await NestFactory.createApplicationContext(AppModule, {
+      // if a custom logger is supposed to be used, disable the default logger here
+      logger: false,
+    });
+
+    // And in this case attach a custom logger
+    app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+
+    app.enableShutdownHooks();
+
+    await app.init();
+  }
+
+  if (!logger) {
+    logger = new Logger("promoo-api-gateway");
+  }
+}
 
 /**
  * API Gateway event handler
@@ -37,23 +60,35 @@ const logger: Logger = winston.createLogger(logConfiguration);
  * @param callback function that will be used to send response
  */
 export const echo: APIGatewayProxyHandler = async (
-    event: APIGatewayEvent,
-    context: Context,
-    callback: Callback
+  event: APIGatewayEvent,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  context: Context,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  callback: Callback
 ): Promise<APIGatewayProxyResult> => {
-    logger.info('Received api gateway event ', event);
-    try {
-        logger.info('post to sqs success ' + await clickQueueSvc().post(JSON.stringify(event)));
-        
-        if(event.pathParameters && event.pathParameters['custid']) {
-            const customer = await customerSvc().getUser(parseInt(event.pathParameters['custid']))
-            logger.info('found customer', customer);
-        }
-    } catch (err) {
-        logger.error("error posting to sqs", err);
+  bootstrap();
+  logger.debug("Received api gateway event ", JSON.stringify(event));
+
+  const clickQueueSvc: SQSSvc = app.get<SQSSvc>(SQSSvc);
+  const customerSvc: CustomerSvc = app.get<CustomerSvc>(CustomerSvc);
+  const responseSvc: ResponseSvc = app.get<ResponseSvc>(ResponseSvc);
+
+  try {
+    logger.debug(
+      "post to sqs success " + (await clickQueueSvc.post(JSON.stringify(event)))
+    );
+
+    if (event.pathParameters && event.pathParameters["custid"]) {
+      const customer = await customerSvc.getUser(
+        parseInt(event.pathParameters["custid"])
+      );
+      logger.debug("found customer " + JSON.stringify(customer));
     }
-    return responseSvc().response(event);
-}
+  } catch (err) {
+    logger.error("error posting to sqs", err.stack);
+  }
+  return responseSvc.response(event);
+};
 
 /**
  * SQS event handler
@@ -63,23 +98,31 @@ export const echo: APIGatewayProxyHandler = async (
  * @param callback function that will be used to send response
  */
 export const record: SQSHandler = async (
-    event: SQSEvent,
-    context: Context,
-    callback: Callback
+  event: SQSEvent,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  context: Context,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  callback: Callback
 ): Promise<void> => {
-    logger.info('Received sqs event', event);
-    await async.eachSeries(event.Records, async function(record: SQSRecord) {
-        try {
-            const d: Date = new Date();
-            const content: Buffer = Buffer.from(JSON.stringify(record.body), "utf-8");
-            const key: string = 'click-' + d.getMilliseconds() + '.json';
-    
-            logger.info("uploaded to s3 ", await achiveBucketSvc().upload(key, content));
-        } catch (err) {
-            logger.error("error uploading to s3", err);
-        }
-    }); 
-}
+  bootstrap();
+  logger.debug("Received sqs event ", JSON.stringify(event));
+
+  const achiveBucketSvc: S3Svc = app.get<S3Svc>(S3Svc);
+  await async.eachSeries(event.Records, async function (record: SQSRecord) {
+    try {
+      const d: Date = new Date();
+      const content: Buffer = Buffer.from(JSON.stringify(record.body), "utf-8");
+      const key: string = "click-" + d.getMilliseconds() + ".json";
+
+      logger.debug(
+        "uploaded to s3 ",
+        await achiveBucketSvc.upload(key, content)
+      );
+    } catch (err) {
+      logger.error("error uploading to s3", err.stack);
+    }
+  });
+};
 
 /**
  * S3 event handler
@@ -90,11 +133,14 @@ export const record: SQSHandler = async (
  * @param callback callback function
  */
 export const archive: S3Handler = (
-    event: S3Event,
-    context: Context,
-    callback: Callback
+  event: S3Event,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  context: Context,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  callback: Callback
 ): void => {
-    event.Records.forEach(record => {
-        logger.info('Received s3 record:', record);
-    });
-}
+  bootstrap();
+  event.Records.forEach((record) => {
+    logger.debug("Received s3 record: " + JSON.stringify(record));
+  });
+};

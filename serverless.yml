@@ -13,6 +13,9 @@ frameworkVersion: '>=2.0.0 <3.0.0'
 provider:
   name: aws
   runtime: nodejs12.x
+  # https://www.serverless.com/blog/serverless-v1.2.0  
+  environment:
+    NODE_ENV: ${opt:stage, 'local'}
   stage: ${opt:stage, 'local'}
   logRetentionInDays: 14
   region: us-west-2

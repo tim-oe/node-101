@@ -4,6 +4,9 @@
 npm init -y
 # generate ignore file
 npx gitignore node
+# nestjs ()
+npm i -g @nestjs/cli
+# TODO how to add to project
 # typescript install
 npm i -D typescript @types/node ts-node nodemon tsconfig-paths
 # tsconfig
@@ -31,5 +34,3 @@ sudo npm install -g serverless
 serverless
 # serverless plugins
 npm i -D serverless-localstack serverless-plugin-typescript serverless-plugin-include-dependencies serverless-plugin-common-excludes
-# create docker network
-docker network create shared

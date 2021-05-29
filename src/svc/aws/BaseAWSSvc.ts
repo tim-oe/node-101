@@ -1,23 +1,29 @@
-import winston = require('winston');
-import { Logger } from 'winston';
-import { logConfiguration } from "../../config/logging.config";
+import { Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 
-import { Config } from 'aws-sdk';
+import * as AWS from "aws-sdk";
+import { Config, Credentials } from "aws-sdk";
 
-//TODO localstack specific...
-const baseUrl: string  = 'http://' + process.env.LOCALSTACK_HOSTNAME + ':4566/000000000000/';
-export {baseUrl} ;
+export default abstract class BaseAWSSvc {
+  protected readonly logger = new Logger(this.constructor.name);
 
-export default class BaseAWSSvc {
+  protected baseUrl!: string;
 
-    protected AWS = require('aws-sdk');
-    protected logger: Logger = winston.createLogger(logConfiguration);
+  //TODO why this can't use * import???
+  protected AWS = require("aws-sdk");
 
-    protected constructor(config: Config) {
-        if(config) {
-            // need to set creds before creating sqs client
-            // https://stackoverflow.com/questions/56152697/could-not-load-credentials-from-any-providers-when-attempting-upload-to-aws-s3
-            this.AWS.config.update(config)           
-        }
+  public constructor(protected configService: ConfigService) {
+    const config: Config = new Config();
+
+    // need to set creds before creating sqs client
+    // https://stackoverflow.com/questions/56152697/could-not-load-credentials-from-any-providers-when-attempting-upload-to-aws-s3
+    if (this.configService.get<boolean>("aws.localstack")) {
+      this.baseUrl =
+        "http://" + process.env.LOCALSTACK_HOSTNAME + ":4566/000000000000/";
+      config.credentials = new Credentials("localstack", "localstack");
     }
+
+    config.region = this.configService.get("aws.region");
+    AWS.config.update(config);
+  }
 }

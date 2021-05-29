@@ -1,29 +1,22 @@
+import Customer from "../../entity/Customer";
+import { Injectable, Logger } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
 
-import CustomerRepository from '../../repository/CustomerRepository';
-import Customer from '../../entity/Customer';
-import BaseDaoSvc from './BaseDaoSvc';
-import SecretsSvc from '../aws/SecretsSvc';
+@Injectable()
+export default class CustomerSvc {
+  protected readonly logger = new Logger(this.constructor.name);
 
-export default class CustomerSvc extends BaseDaoSvc{
+  constructor(
+    @InjectRepository(Customer)
+    protected repo: Repository<Customer>
+  ) {}
 
-    protected customerRepository!: CustomerRepository;
+  public getUser = async (id: number): Promise<Customer | undefined> => {
+    return await this.repo.findOne({ where: { id: id } });
+  };
 
-    public constructor (secretsSvc: SecretsSvc) {
-        super(secretsSvc)
-    }
-
-    protected  getCustomerRepository =  async (): Promise<CustomerRepository> => { 
- 
-        if(this.customerRepository == null) {
-            this.customerRepository = await this.repository(CustomerRepository);
-        }
-        
-        return this.customerRepository;
-    }
-
-    public getUser = async (id: number): Promise<Customer | undefined> => {
-        const customerRepository: CustomerRepository = await this.getCustomerRepository();
-
-        return await customerRepository.findOne({id: id});
-    }
+  public insert = async (customer: Customer): Promise<Customer | undefined> => {
+    return await this.repo.save(customer);
+  };
 }

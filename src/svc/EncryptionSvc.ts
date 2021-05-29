@@ -1,61 +1,69 @@
-import winston from 'winston';
+import * as crypto from "crypto";
 
-import { logConfiguration } from "../../src/config/logging.config";
+import * as urlsafebase64 from "urlsafe-base64";
 
+import { Injectable, Logger } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+
+@Injectable()
 export default class EncryptionSvc {
   protected static readonly AES_IV_LENGTH: number = 16;
   protected static readonly AES_KEY_LENGTH: number = 32;
-  protected static readonly ALGORTHM = 'aes-256-ctr';
-  protected static readonly DIGEST = 'sha256';
+  protected static readonly ALGORTHM = "aes-256-ctr";
+  protected static readonly DIGEST = "sha256";
 
-  protected logger = winston.createLogger(logConfiguration);
+  protected readonly logger = new Logger(this.constructor.name);
 
-  // TODO seed better
-  protected secret = 'donttellanyone';
+  protected iv = crypto.randomBytes(4);
 
-  protected URLSafeBase64 = require('urlsafe-base64');
-
-  //TODO why not via import???
-  protected crypto = require('crypto');
-
-  protected iv = this.crypto.randomBytes(4)
+  public constructor(protected configService: ConfigService) {}
 
   protected getSecret = (): Buffer => {
-    let hash = this.crypto.createHash(EncryptionSvc.DIGEST).update('nqZAiIeV2STR').digest();
+    const secret = this.configService.get<string>("encryption.secret");
+
+    if (!secret) {
+      throw Error("secret not set!");
+    }
+
+    let hash = crypto.createHash(EncryptionSvc.DIGEST).update(secret).digest();
 
     hash = hash.subarray(0, EncryptionSvc.AES_KEY_LENGTH);
-    this.logger.info(' secret hash ' + hash.toString('hex'));
+    this.logger.debug(" secret hash " + hash.toString("hex"));
 
     return hash;
-  }
+  };
 
   /**
    * encrypt value
-   * @param value 
+   * @param value
    * @returns the encrypted value
    */
   encrypt = (value: string): string => {
     // Validate missing value
     if (!value) {
-      throw Error('A value is required!');
+      throw Error("A value is required!");
     }
 
-    let hash = this.crypto.createHash(EncryptionSvc.DIGEST).update(this.iv).digest();
+    let hash = crypto.createHash(EncryptionSvc.DIGEST).update(this.iv).digest();
     hash = hash.subarray(0, EncryptionSvc.AES_IV_LENGTH);
-    this.logger.info('encrypt iv hash ' + hash.toString('hex'));
+    this.logger.debug("encrypt iv hash " + hash.toString("hex"));
 
     // Initialize Cipher instance
-    const cipher = this.crypto.createCipheriv(EncryptionSvc.ALGORTHM, this.getSecret(), hash);
+    const cipher = crypto.createCipheriv(
+      EncryptionSvc.ALGORTHM,
+      this.getSecret(),
+      hash
+    );
     cipher.setAutoPadding(false);
 
     // Return Buffer as a binary encoded string
-    const buffer = Buffer.from(value, 'utf8').toString('binary');
+    const buffer = Buffer.from(value, "utf8").toString("binary");
 
-    const list = [cipher.update(buffer, 'binary'), this.iv];
+    const list = [cipher.update(buffer, "binary"), this.iv];
 
     // concat and return both parts
-    return this.URLSafeBase64.encode(Buffer.concat(list));
-  }
+    return urlsafebase64.encode(Buffer.concat(list));
+  };
 
   /**
    * decrypt an ecrypted token
@@ -65,40 +73,51 @@ export default class EncryptionSvc {
   decrypt = (token: string): string => {
     // Validate missing token
     if (!token) {
-      throw Error('A token is required!');
+      throw Error("A token is required!");
     }
 
     // encodes encrypted value from base64 to hex
-    let buffer = Buffer.from(token, 'base64');
-    this.logger.info('decrypt buffer raw ' + buffer.toString('hex'));
+    let buffer = Buffer.from(token, "base64");
+    this.logger.debug("decrypt buffer raw " + buffer.toString("hex"));
 
     // get creation iv
     const iv = Buffer.from(buffer.subarray(buffer.length - 4, buffer.length));
-    this.logger.info('decrypt iv ' + iv.toString('hex'));
+    this.logger.debug("decrypt iv " + iv.toString("hex"));
 
     // remove iv suffix
     buffer = Buffer.from(buffer.subarray(0, buffer.length - 4));
-    this.logger.info('decrypt buffer [trim] ' + buffer.toString('hex'));
+    this.logger.debug("decrypt buffer [trim] " + buffer.toString("hex"));
 
-    let hash = this.crypto.createHash('sha256').update(iv).digest();
+    let hash = crypto.createHash("sha256").update(iv).digest();
     hash = hash.subarray(0, EncryptionSvc.AES_IV_LENGTH);
-    this.logger.info('decrypt iv hash ' + hash.toString('hex'));
+    this.logger.debug("decrypt iv hash " + hash.toString("hex"));
 
     // Initialize Decipher instance
-    const decipher = this.crypto.createDecipheriv(EncryptionSvc.ALGORTHM, this.getSecret(), hash);
+    const decipher = crypto.createDecipheriv(
+      EncryptionSvc.ALGORTHM,
+      this.getSecret(),
+      hash
+    );
     decipher.setAutoPadding(false);
 
     // Get decrypted data from decipher instance
-    const firstPart = decipher.update(buffer.toString('hex'), 'hex', 'base64');
-    const finalPart = decipher.final('base64') || '';
+    const firstPart = decipher.update(buffer.toString("hex"), "hex", "base64");
+    const finalPart = decipher.final("base64") || "";
 
     // concat both parts
     const decrypted = `${firstPart}${finalPart}`;
 
     // Encode decrypted value as a 64-bit Buffer
-    const buf = Buffer.from(decrypted, 'base64');
+    const buf = Buffer.from(decrypted, "base64");
 
     // convert decrypted value from base64 to utf-8 string
-    return buf.toString('utf8');
-  }
+    return buf.toString("utf8");
+  };
+
+  /**
+   * https://www.hacksparrow.com/nodejs/how-to-generate-md5-sha1-sha512-sha256-checksum-hashes.html
+   */
+  public getMD5 = (data: string): string => {
+    return crypto.createHash("md5").update(data).digest("hex");
+  };
 }

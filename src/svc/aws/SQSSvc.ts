@@ -1,74 +1,93 @@
-import { 
-    Config,
-    SQS 
-} from 'aws-sdk';
+import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as AWS from "aws-sdk";
 
-import BaseAWSSvc, { baseUrl } from "./BaseAWSSvc";
+import { SQS } from "aws-sdk";
+
+import BaseAWSSvc from "./BaseAWSSvc";
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
 // https://github.com/localstack/localstack/issues/948
-const defaultConfig: SQS.Types.ClientConfiguration = {apiVersion: '2012-11-05'};
-const unsetQueue: string = 'unset';
+const defaultConfig: SQS.Types.ClientConfiguration = {
+  apiVersion: "2012-11-05",
+};
 
 // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/SQS.html
+
+@Injectable()
 export default class SQSSvc extends BaseAWSSvc {
+  protected sqs!: SQS;
+  protected queueName!: string;
+  protected queueUrl!: string;
 
-    protected sqs: SQS;
-    protected queueName: string;
-    protected queueUrl: string = unsetQueue;
-    public constructor(
-        queueName: string, 
-        awsConfig: Config, 
-        sqsConfig: SQS.Types.ClientConfiguration) {
-        super(awsConfig);
-        
-        this.queueName = queueName;
-        
-        if(sqsConfig){
-            this.sqs = new this.AWS.SQS(sqsConfig);
+  public constructor(protected configService: ConfigService) {
+    super(configService);
+    const queueName = configService.get<string>("aws.sqs.queue");
+    // https://stackoverflow.com/questions/45194964/how-to-assign-string-undefined-to-string-in-typescript
+    if (queueName !== undefined) {
+      this.queueName = queueName;
+    } else {
+      throw Error("queue is not in config");
+    }
+    if (this.configService.get<boolean>("aws.localstack")) {
+      // https://stackoverflow.com/questions/61028751/missing-credentials-in-config-if-using-aws-config-file-set-aws-sdk-load-config
+      // TODO this is localstack only
+      const sqsConfig: SQS.Types.ClientConfiguration = {
+        endpoint: this.baseUrl,
+        apiVersion: "2012-11-05",
+      };
+      this.sqs = new AWS.SQS(sqsConfig);
+    } else {
+      this.sqs = new AWS.SQS(defaultConfig);
+    }
+  }
+
+  // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs
+  // TODO the get url returns localhost even in the lambda
+  // https://github.com/localstack/localstack/issues/3562
+  protected getQueueUrl = async (): Promise<string> => {
+    if (!this.queueUrl) {
+      const sqsUrlParams: SQS.Types.GetQueueUrlRequest = {
+        QueueName: this.queueName,
+      };
+
+      if (this.configService.get<boolean>("aws.localstack")) {
+        this.queueUrl = this.baseUrl + this.queueName;
+        this.logger.debug("localstack hackery..." + this.queueUrl);
+      } else {
+        const queueUrlResult: SQS.Types.GetQueueUrlResult = await this.sqs
+          .getQueueUrl(sqsUrlParams)
+          .promise();
+
+        if (queueUrlResult.QueueUrl) {
+          this.logger.debug("sqs: endpoint " + queueUrlResult.QueueUrl);
+          this.queueUrl = queueUrlResult.QueueUrl;
         } else {
-            this.sqs = new this.AWS.SQS(defaultConfig);
+          throw Error("failed to get url for " + this.queueName);
         }
+      }
+    }
+    return this.queueUrl;
+  };
+
+  public post = async (message: string): Promise<string> => {
+    const request: SQS.Types.SendMessageRequest = {
+      MessageBody: message,
+      //QueueUrl: ,
+      QueueUrl: await this.getQueueUrl(),
+      DelaySeconds: 0,
+    };
+
+    const result: SQS.Types.SendMessageResult = await this.sqs
+      .sendMessage(request)
+      .promise();
+
+    this.logger.debug("post to sqs success\n" + JSON.stringify(result));
+
+    if (!result.MessageId) {
+      throw new Error("failed to post to " + this.queueName + " " + message);
     }
 
-    // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs
-    // TODO the get url returns localhost even in the lambda
-    // https://github.com/localstack/localstack/issues/3562
-    protected  getQueueUrl =  async (): Promise<string> => {
-        if(this.queueUrl === unsetQueue){
-            const sqsUrlParams: SQS.Types.GetQueueUrlRequest = {QueueName: this.queueName};
-
-            const queueUrlResult: SQS.Types.GetQueueUrlResult = await this.sqs.getQueueUrl(sqsUrlParams).promise()
-
-            if (queueUrlResult.QueueUrl) {
-                this.logger.info('sqs: endpoint ' + queueUrlResult.QueueUrl);
-                //TODO not working in localstack...
-                //this.queueUrl = queueUrlResult.QueueUrl;
-                this.queueUrl = baseUrl + this.queueName;
-
-            } else {
-                throw new Error('failed to get url for ' + this.queueName);
-            }
-        }
-        return this.queueUrl;
-    } 
-
-    public post = async (message: string): Promise<string> => {
-        const request: SQS.Types.SendMessageRequest = {
-            MessageBody: message,
-            //QueueUrl: ,
-            QueueUrl: await this.getQueueUrl(),
-            DelaySeconds: 0
-        };
-
-        const result: SQS.Types.SendMessageResult = await this.sqs.sendMessage(request).promise();
-
-        this.logger.info('post to sqs success', result);
-
-        if(!result.MessageId) {
-            throw new Error('failed to post to ' + this.queueName + ' ' + message);
-        }
-
-        return result.MessageId;
-    }
+    return result.MessageId;
+  };
 }

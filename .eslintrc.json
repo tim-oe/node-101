@@ -12,6 +12,7 @@
     ],
     "rules": { 
       // https://palantir.github.io/tslint/rules/no-inferrable-types/
-      "no-inferrable-types": false
+      // https://eslint.org/docs/user-guide/configuring/rules#disabling-rules
+      "@typescript-eslint/no-inferrable-types": "off"
     }
 }
