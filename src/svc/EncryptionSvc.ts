@@ -2,11 +2,12 @@ import * as crypto from "crypto";
 
 import * as urlsafebase64 from "urlsafe-base64";
 
-import { Injectable, Logger } from "@nestjs/common";
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
+import SecretsSvc from "./aws/SecretsSvc";
 
 @Injectable()
-export default class EncryptionSvc {
+export default class EncryptionSvc implements OnModuleInit {
   protected static readonly AES_IV_LENGTH: number = 16;
   protected static readonly AES_KEY_LENGTH: number = 32;
   protected static readonly ALGORTHM = "aes-256-ctr";
@@ -14,11 +15,16 @@ export default class EncryptionSvc {
 
   protected readonly logger = new Logger(this.constructor.name);
 
-  protected iv = crypto.randomBytes(4);
+  protected iv: Buffer = crypto.randomBytes(4);
 
-  public constructor(protected configService: ConfigService) {}
+  protected secret!: Buffer;
 
-  protected getSecret = (): Buffer => {
+  public constructor(
+    protected configService: ConfigService,
+    protected secretsSvc: SecretsSvc) {}
+  
+    async onModuleInit(): Promise<void> {
+    // TODO get secret from secrets 
     const secret = this.configService.get<string>("encryption.secret");
 
     if (!secret) {
@@ -30,8 +36,8 @@ export default class EncryptionSvc {
     hash = hash.subarray(0, EncryptionSvc.AES_KEY_LENGTH);
     this.logger.debug(" secret hash " + hash.toString("hex"));
 
-    return hash;
-  };
+    this.secret = hash;
+  }
 
   /**
    * encrypt value
@@ -51,7 +57,7 @@ export default class EncryptionSvc {
     // Initialize Cipher instance
     const cipher = crypto.createCipheriv(
       EncryptionSvc.ALGORTHM,
-      this.getSecret(),
+      this.secret,
       hash
     );
     cipher.setAutoPadding(false);
@@ -95,7 +101,7 @@ export default class EncryptionSvc {
     // Initialize Decipher instance
     const decipher = crypto.createDecipheriv(
       EncryptionSvc.ALGORTHM,
-      this.getSecret(),
+      this.secret,
       hash
     );
     decipher.setAutoPadding(false);

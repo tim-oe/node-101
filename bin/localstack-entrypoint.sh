@@ -37,9 +37,9 @@ printf "\n\n"
 awslocal sqs create-queue --queue-name node-101-click
 
 printf "\n\n"
-# db secret
-awslocal secretsmanager create-secret --name dev/node-101/db \
-    --description "db credentials" \
-    --secret-string '{"username": "test","password": "test"}'
+# encryption secret
+awslocal secretsmanager create-secret --name dev/node-101/encryption \
+    --description "encryption stuff" \
+    --secret-string '{"secret": "donttellanyone"}'
 
 printf "\n\nlocalstack configuration complete\n"
