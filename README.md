@@ -16,6 +16,7 @@ pertains to aws development.
 - [urlsafe-base64](https://www.npmjs.com/package/urlsafe-base64])
 - [winston](https://github.com/winstonjs/winston)
 - [jest](https://jestjs.io/)
+- [typeorm-transactional-tests](https://github.com/viniciusjssouza/typeorm-transactional-tests)
 - [eslint](https://eslint.org/docs/developer-guide/nodejs-api)
 - [jsDoc](https://www.npmjs.com/package/jsdoc)
 - [serverless](https://www.serverless.com/)
