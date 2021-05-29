@@ -1,4 +1,7 @@
 import { TestingModule } from "@nestjs/testing";
+import { Connection, getConnection } from "typeorm";
+import { TransactionalTestContext } from 'typeorm-transactional-tests';
+
 import Customer from "../../../src/entity/Customer";
 import CustomerSvc from "../../../src/svc/dao/CustomerSvc";
 import { bootstrap } from "../../base.test";
@@ -7,6 +10,18 @@ describe("CustomerSvc Test", () => {
   let svc: CustomerSvc;
   let app: TestingModule;
 
+  let connection: Connection;
+  let transactionalContext: TransactionalTestContext;
+  
+  beforeEach(async () => {
+      connection = getConnection();
+      transactionalContext = new TransactionalTestContext(connection);
+      await transactionalContext.start();    
+  });
+  
+  afterEach(async () => {
+      await transactionalContext.finish();
+  });  
   beforeAll(async () => {
     app = await bootstrap();
 
