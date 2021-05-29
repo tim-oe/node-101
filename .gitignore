@@ -3,6 +3,7 @@ data/
 logs/
 mysql/
 node_modules/
+reports/
 
 # .build/
 .gradle/
