@@ -9,8 +9,9 @@ export default abstract class BaseAWSSvc {
 
   protected endpoint!: string;
 
-  //TODO why this can't use * import???
-  protected AWS = require("aws-sdk");
+  // https://stackoverflow.com/questions/30121801/how-to-import-part-of-object-in-es6-modules
+  //TODO why this 
+  protected AWS = AWS;
 
   public constructor(protected configService: ConfigService) {
     const config: Config = new Config();
