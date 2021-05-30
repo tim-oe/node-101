@@ -12,13 +12,14 @@ frameworkVersion: '>=2.0.0 <3.0.0'
 
 provider:
   name: aws
-  runtime: nodejs12.x
+  runtime: nodejs14.x
   # https://www.serverless.com/blog/serverless-v1.2.0  
   environment:
     NODE_ENV: ${opt:stage, 'local'}
   stage: ${opt:stage, 'local'}
   logRetentionInDays: 14
   region: us-west-2
+  lambdaHashingVersion: '20201221'
   deploymentPrefix: aws-lambda
   # very important, deployment wont fail but execution without this
   # when using localstack its important that before you deploy your 
@@ -41,14 +42,18 @@ plugins:
 
 package:
   individually: true
+  excludeDevDependencies: true
+  # include configuration files for config
+  # includes works pattern doesn't
   include:
-    # include configuration files for config
-    - config/*.json
+  # https://github.com/prisma-labs/serverless-plugin-typescript/issues/231
+  #patterns:
+    - config/${opt:stage, 'default'}.yml
 
 functions:
   echo:
     handler: src/functions/handler.echo
-    runtime: nodejs12.x
+    runtime: nodejs14.x
     timeout: 20
     memorySize: 256
     events:
@@ -59,7 +64,7 @@ functions:
 
   record:
     handler: src/functions/handler.record
-    runtime: nodejs12.x
+    runtime: nodejs14.x
     timeout: 20
     memorySize: 256
     events:
@@ -70,7 +75,7 @@ functions:
 
   archive:
     handler: src/functions/handler.archive
-    runtime: nodejs12.x
+    runtime: nodejs14.x
     timeout: 20
     memorySize: 256
     events:
@@ -84,7 +89,7 @@ custom:
   includeDependencies:
     always:
       # https://github.com/dougmoscrop/serverless-plugin-include-dependencies/issues/46
-      - 'node_modules/config/**'
+      # TODO determine if still needed
       - 'node_modules/mysql/**'
   
   region: ${self:provider.region}

@@ -14,6 +14,7 @@ import SecretsSvc from "../svc/aws/SecretsSvc";
 import SQSSvc from "../svc/aws/SQSSvc";
 import CustomerSvc from "../svc/dao/CustomerSvc";
 import EncryptionSvc from "../svc/EncryptionSvc";
+import ResponseSvc from "../svc/ResponseSvc";
 import configuration from "./configuration";
 
 @Module({
@@ -63,6 +64,6 @@ import configuration from "./configuration";
         } as TypeOrmModuleAsyncOptions),
     }),
   ],
-  providers: [CustomerSvc, EncryptionSvc, SQSSvc, S3Svc, SecretsSvc],
+  providers: [CustomerSvc, EncryptionSvc, SQSSvc, S3Svc, SecretsSvc, ResponseSvc],
 })
 export class AppModule {}

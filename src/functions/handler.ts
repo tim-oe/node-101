@@ -30,8 +30,10 @@ let logger: Logger;
  * Re-use the application context across function invocations
  * https://dev.to/sebastianschlecht/serverless-nest-js-micro-services-integrations-without-http-ikk
  */
-async function bootstrap(): Promise<void> {
+async function initnest(): Promise<void> {
+  console.log("bootstrap starting");
   if (!app) {
+    console.log("bootstrap creating app");
     app = await NestFactory.createApplicationContext(AppModule, {
       // if a custom logger is supposed to be used, disable the default logger here
       logger: false,
@@ -46,8 +48,10 @@ async function bootstrap(): Promise<void> {
   }
 
   if (!logger) {
+    console.log("bootstrap create logger");
     logger = new Logger("promoo-api-gateway");
   }
+  console.log("bootstrap complete");
 }
 
 /**
@@ -66,8 +70,8 @@ export const echo: APIGatewayProxyHandler = async (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   callback: Callback
 ): Promise<APIGatewayProxyResult> => {
-  bootstrap();
-  logger.debug("Received api gateway event ", JSON.stringify(event));
+  console.log("Received api gateway event ", JSON.stringify(event));
+  await initnest();
 
   const clickQueueSvc: SQSSvc = app.get<SQSSvc>(SQSSvc);
   const customerSvc: CustomerSvc = app.get<CustomerSvc>(CustomerSvc);
@@ -104,7 +108,7 @@ export const record: SQSHandler = async (
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   callback: Callback
 ): Promise<void> => {
-  bootstrap();
+  await initnest();
   logger.debug("Received sqs event ", JSON.stringify(event));
 
   const achiveBucketSvc: S3Svc = app.get<S3Svc>(S3Svc);
@@ -132,14 +136,14 @@ export const record: SQSHandler = async (
  * @param context see https://docs.aws.amazon.com/lambda/latest/dg/nodejs-context.html
  * @param callback callback function
  */
-export const archive: S3Handler = (
+export const archive: S3Handler = async (
   event: S3Event,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   context: Context,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   callback: Callback
-): void => {
-  bootstrap();
+): Promise<void> => {
+  await initnest();
   event.Records.forEach((record) => {
     logger.debug("Received s3 record: " + JSON.stringify(record));
   });

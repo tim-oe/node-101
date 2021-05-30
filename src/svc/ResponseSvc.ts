@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { APIGatewayProxyEvent, APIGatewayProxyResult } from "aws-lambda";
-import cookie, { CookieSerializeOptions } from "cookie";
+import { CookieSerializeOptions } from "cookie";
 
 //1 year
 const MAX_AGE: number = 60 * 60 * 24 * 365;
@@ -9,6 +9,8 @@ const MAX_AGE: number = 60 * 60 * 24 * 365;
 @Injectable()
 export default class ResponseSvc {
   protected readonly logger = new Logger(this.constructor.name);
+
+  protected cookie = require('cookie');
 
   public constructor(protected configService: ConfigService) {}
 
@@ -23,7 +25,7 @@ export default class ResponseSvc {
       expires: expiry,
     };
 
-    const myCookie: string = cookie.serialize(
+    const myCookie: string = this.cookie.serialize(
       this.configService.get("cookie", "failed"),
       "chocolateChip",
       cookieConfig

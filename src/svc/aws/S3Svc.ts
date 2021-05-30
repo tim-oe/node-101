@@ -28,8 +28,8 @@ export default class S3Svc extends BaseAWSSvc {
       throw Error("bucket name is not in config");
     }
 
-    if(this.baseUrl) {
-      defaultConfig.endpoint = this.baseUrl;
+    if (this.endpoint) {
+      defaultConfig.endpoint = this.endpoint;
     }
 
     this.logger.debug("s3 config " + JSON.stringify(defaultConfig));

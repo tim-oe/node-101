@@ -30,8 +30,8 @@ export default class SQSSvc extends BaseAWSSvc {
       throw Error("queue is not in config");
     }
 
-    if(this.baseUrl) {
-      defaultConfig.endpoint = this.baseUrl;
+    if (this.endpoint) {
+      defaultConfig.endpoint = this.endpoint;
     }
 
     this.logger.debug("sqs config " + JSON.stringify(defaultConfig));
@@ -49,7 +49,7 @@ export default class SQSSvc extends BaseAWSSvc {
       };
 
       if (this.configService.get<boolean>("aws.localstack")) {
-        this.queueUrl = this.baseUrl + this.queueName;
+        this.queueUrl = this.endpoint + '000000000000/' + this.queueName;
         this.logger.debug("localstack hackery..." + this.queueUrl);
       } else {
         const queueUrlResult: SQS.Types.GetQueueUrlResult = await this.sqs

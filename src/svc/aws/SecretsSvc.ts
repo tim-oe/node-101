@@ -16,8 +16,8 @@ export default class SecretsSvc extends BaseAWSSvc {
   public constructor(protected configService: ConfigService) {
     super(configService);
 
-    if(this.baseUrl) {
-      defaultConfig.endpoint = this.baseUrl;
+    if (this.endpoint) {
+      defaultConfig.endpoint = this.endpoint;
     }
 
     this.logger.debug("secrets config " + JSON.stringify(defaultConfig));
@@ -41,8 +41,7 @@ export default class SecretsSvc extends BaseAWSSvc {
         throw new Error("no data returned for secret " + id);
       }
     } catch (err) {
-      this.logger.error("failed to get secret " + id + '\n' + JSON.stringify(err), err.stack);
-      throw new Error("failed to get secret " + id);
+      throw new Error("failed to get secret " + id + "\n" + JSON.stringify(err));
     }
   };
 }

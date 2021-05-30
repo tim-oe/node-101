@@ -1,6 +1,6 @@
 import { TestingModule } from "@nestjs/testing";
 import { Connection, getConnection } from "typeorm";
-import { TransactionalTestContext } from 'typeorm-transactional-tests';
+import { TransactionalTestContext } from "typeorm-transactional-tests";
 
 import Customer from "../../../src/entity/Customer";
 import CustomerSvc from "../../../src/svc/dao/CustomerSvc";
@@ -12,16 +12,16 @@ describe("CustomerSvc Test", () => {
 
   let connection: Connection;
   let transactionalContext: TransactionalTestContext;
-  
+
   beforeEach(async () => {
-      connection = getConnection();
-      transactionalContext = new TransactionalTestContext(connection);
-      await transactionalContext.start();    
+    connection = getConnection();
+    transactionalContext = new TransactionalTestContext(connection);
+    await transactionalContext.start();
   });
-  
+
   afterEach(async () => {
-      await transactionalContext.finish();
-  });  
+    await transactionalContext.finish();
+  });
   beforeAll(async () => {
     app = await bootstrap();
 
@@ -34,7 +34,7 @@ describe("CustomerSvc Test", () => {
     app.close();
   });
   it("insert/select", async () => {
-    const expected: Customer =  new Customer();
+    const expected: Customer = new Customer();
 
     expected.email = "test@example.net";
     expected.password = "pwd";

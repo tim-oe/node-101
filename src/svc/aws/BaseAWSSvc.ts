@@ -7,7 +7,7 @@ import { Config, Credentials } from "aws-sdk";
 export default abstract class BaseAWSSvc {
   protected readonly logger = new Logger(this.constructor.name);
 
-  protected baseUrl!: string;
+  protected endpoint!: string;
 
   //TODO why this can't use * import???
   protected AWS = require("aws-sdk");
@@ -18,15 +18,15 @@ export default abstract class BaseAWSSvc {
     // localstack isn't reading creds from config file
     // https://stackoverflow.com/questions/56152697/could-not-load-credentials-from-any-providers-when-attempting-upload-to-aws-s3
     if (this.configService.get<boolean>("aws.localstack")) {
-      this.baseUrl =
-        "http://" + process.env.LOCALSTACK_HOSTNAME + ":4566/000000000000/";
+      this.endpoint =
+        "http://" + process.env.LOCALSTACK_HOSTNAME + ":4566/";
       config.credentials = new Credentials("localstack", "localstack");
     }
 
-    const endpoint = this.configService.get<string>("aws.endpoint")
+    const endpoint = this.configService.get<string>("aws.endpoint");
 
-    if(endpoint) {
-      this.baseUrl = endpoint;
+    if (endpoint) {
+      this.endpoint = endpoint;
     }
 
     config.region = this.configService.get("aws.region");
