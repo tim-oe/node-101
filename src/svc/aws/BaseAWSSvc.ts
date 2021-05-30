@@ -18,8 +18,7 @@ export default abstract class BaseAWSSvc {
     // localstack isn't reading creds from config file
     // https://stackoverflow.com/questions/56152697/could-not-load-credentials-from-any-providers-when-attempting-upload-to-aws-s3
     if (this.configService.get<boolean>("aws.localstack")) {
-      this.endpoint =
-        "http://" + process.env.LOCALSTACK_HOSTNAME + ":4566/";
+      this.endpoint = "http://" + process.env.LOCALSTACK_HOSTNAME + ":4566/";
       config.credentials = new Credentials("localstack", "localstack");
     }
 

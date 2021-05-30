@@ -10,7 +10,7 @@ const MAX_AGE: number = 60 * 60 * 24 * 365;
 export default class ResponseSvc {
   protected readonly logger = new Logger(this.constructor.name);
 
-  protected cookie = require('cookie');
+  protected cookie = require("cookie");
 
   public constructor(protected configService: ConfigService) {}
 

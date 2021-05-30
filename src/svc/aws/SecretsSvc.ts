@@ -41,7 +41,9 @@ export default class SecretsSvc extends BaseAWSSvc {
         throw new Error("no data returned for secret " + id);
       }
     } catch (err) {
-      throw new Error("failed to get secret " + id + "\n" + JSON.stringify(err));
+      throw new Error(
+        "failed to get secret " + id + "\n" + JSON.stringify(err)
+      );
     }
   };
 }

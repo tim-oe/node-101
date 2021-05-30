@@ -64,6 +64,13 @@ import configuration from "./configuration";
         } as TypeOrmModuleAsyncOptions),
     }),
   ],
-  providers: [CustomerSvc, EncryptionSvc, SQSSvc, S3Svc, SecretsSvc, ResponseSvc],
+  providers: [
+    CustomerSvc,
+    EncryptionSvc,
+    SQSSvc,
+    S3Svc,
+    SecretsSvc,
+    ResponseSvc,
+  ],
 })
 export class AppModule {}

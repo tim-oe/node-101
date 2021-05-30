@@ -49,7 +49,7 @@ export default class SQSSvc extends BaseAWSSvc {
       };
 
       if (this.configService.get<boolean>("aws.localstack")) {
-        this.queueUrl = this.endpoint + '000000000000/' + this.queueName;
+        this.queueUrl = this.endpoint + "000000000000/" + this.queueName;
         this.logger.debug("localstack hackery..." + this.queueUrl);
       } else {
         const queueUrlResult: SQS.Types.GetQueueUrlResult = await this.sqs
