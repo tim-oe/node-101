@@ -10,7 +10,7 @@ export default abstract class BaseAWSSvc {
   protected endpoint!: string;
 
   // https://stackoverflow.com/questions/30121801/how-to-import-part-of-object-in-es6-modules
-  //TODO why this 
+  // TODO why this
   protected AWS = AWS;
 
   public constructor(protected configService: ConfigService) {

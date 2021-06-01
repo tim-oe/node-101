@@ -31,14 +31,19 @@ provider:
 
 # https://medium.com/manomano-tech/using-serverless-framework-localstack-to-test-your-aws-applications-locally-17748ffe6755
 # https://www.serverless.com/plugins/serverless-localstack
+# https://www.serverless.com/plugins/serverless-jetpack
 # https://www.serverless.com/plugins/serverless-plugin-typescript
 # https://www.serverless.com/plugins/serverless-plugin-include-dependencies
 # https://www.serverless.com/plugins/serverless-plugin-common-excludes
+# https://www.serverless.com/plugins/serverless-plugin-optimize
+
 plugins:
   - serverless-localstack
+  - serverless-jetpack
   - serverless-plugin-typescript
   - serverless-plugin-include-dependencies
   - serverless-plugin-common-excludes
+  - serverless-plugin-optimize
 
 package:
   individually: true

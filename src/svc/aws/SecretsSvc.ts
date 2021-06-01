@@ -25,7 +25,7 @@ export default class SecretsSvc extends BaseAWSSvc {
     this.secretsmanager = new this.AWS.SecretsManager(defaultConfig);
   }
 
-  public get = async (id: string): Promise<string> => {
+  public get = async <T>(id: string): Promise<T> => {
     try {
       const request: SecretsManager.Types.GetSecretValueRequest = {
         SecretId: id,
@@ -36,7 +36,7 @@ export default class SecretsSvc extends BaseAWSSvc {
 
       if (resp && resp.SecretString) {
         this.logger.debug("got secret: " + id);
-        return resp.SecretString;
+        return JSON.parse(resp.SecretString);
       } else {
         throw new Error("no data returned for secret " + id);
       }

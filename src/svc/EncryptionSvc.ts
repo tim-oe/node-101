@@ -36,8 +36,8 @@ export default class EncryptionSvc implements OnModuleInit {
       throw Error("config key not set!");
     }
 
-    const config: EncrptionConfig = JSON.parse(
-      await this.secretsSvc.get(configKey)
+    const config: EncrptionConfig = await this.secretsSvc.get<EncrptionConfig>(
+      configKey
     );
 
     if (!config) {

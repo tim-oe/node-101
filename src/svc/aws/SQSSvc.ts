@@ -40,7 +40,6 @@ export default class SQSSvc extends BaseAWSSvc {
   }
 
   // https://stackoverflow.com/questions/56269829/aws-lambda-finish-before-sending-message-to-sqs
-  // TODO the get url returns localhost even in the lambda
   // https://github.com/localstack/localstack/issues/3562
   protected getQueueUrl = async (): Promise<string> => {
     if (!this.queueUrl) {
@@ -70,7 +69,6 @@ export default class SQSSvc extends BaseAWSSvc {
   public post = async (message: string): Promise<string> => {
     const request: SQS.Types.SendMessageRequest = {
       MessageBody: message,
-      //QueueUrl: ,
       QueueUrl: await this.getQueueUrl(),
       DelaySeconds: 0,
     };
@@ -86,5 +84,38 @@ export default class SQSSvc extends BaseAWSSvc {
     }
 
     return result.MessageId;
+  };
+
+  public get = async <T>(cnt: number): Promise<T[]> => {
+    const request: SQS.Types.ReceiveMessageRequest = {
+      QueueUrl: await this.getQueueUrl(),
+      MaxNumberOfMessages: cnt,
+    };
+
+    const result: SQS.Types.ReceiveMessageResult = await this.sqs
+      .receiveMessage(request)
+      .promise();
+
+    this.logger.debug("got messages\n" + JSON.stringify(result));
+
+    const msg: T[] = <T[]>{};
+
+    if (result.Messages) {
+      for (let index = 0; index < result.Messages.length; index++) {
+        msg[index] = JSON.parse(result.Messages[index].Body);
+      }
+    }
+
+    return msg;
+  };
+
+  public purge = async (): Promise<void> => {
+    const request: SQS.Types.PurgeQueueRequest = {
+      QueueUrl: await this.getQueueUrl(),
+    };
+
+    const result = await this.sqs.purgeQueue(request).promise();
+
+    this.logger.debug("purged queue\n" + JSON.stringify(result));
   };
 }

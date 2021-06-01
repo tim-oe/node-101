@@ -89,7 +89,7 @@ export const echo: APIGatewayProxyHandler = async (
       logger.debug("found customer " + JSON.stringify(customer));
     }
   } catch (err) {
-    logger.error("error posting to sqs", err.stack);
+    logger.error("error posting to sqs " + JSON.stringify(err), err.stack);
   }
   return responseSvc.response(event);
 };
@@ -123,7 +123,7 @@ export const record: SQSHandler = async (
         await achiveBucketSvc.upload(key, content)
       );
     } catch (err) {
-      logger.error("error uploading to s3", err.stack);
+      logger.error("error uploading to s3 " + JSON.stringify(err), err.stack);
     }
   });
 };
