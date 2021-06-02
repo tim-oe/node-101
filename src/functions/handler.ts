@@ -118,10 +118,7 @@ export const record: SQSHandler = async (
       const content: Buffer = Buffer.from(JSON.stringify(record.body), "utf-8");
       const key: string = "click-" + d.getMilliseconds() + ".json";
 
-      logger.debug(
-        "uploaded to s3 ",
-        await achiveBucketSvc.upload(key, content)
-      );
+      logger.debug("uploaded to s3 ", await achiveBucketSvc.post(key, content));
     } catch (err) {
       logger.error("error uploading to s3 " + JSON.stringify(err), err.stack);
     }

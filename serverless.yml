@@ -43,7 +43,7 @@ plugins:
   - serverless-plugin-typescript
   - serverless-plugin-include-dependencies
   - serverless-plugin-common-excludes
-  - serverless-plugin-optimize
+  #- serverless-plugin-optimize
 
 package:
   individually: true
@@ -123,3 +123,6 @@ custom:
     docker:
       # Enable this flag to run "docker ..." commands as sudo
       sudo: false
+
+  jetpack:
+    concurrency: 3    
