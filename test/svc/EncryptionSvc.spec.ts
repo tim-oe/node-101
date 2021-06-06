@@ -27,6 +27,5 @@ describe("EncryptionSvc Test", () => {
     expect(cryptSvc.decrypt(value)).toBe(expected);
 
     expect(cryptSvc.getMD5(expected)).toBeDefined();
-
   });
 });

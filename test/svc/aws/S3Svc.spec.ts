@@ -5,6 +5,7 @@ import { bootstrap, TestObject } from "../../base.test";
 
 describe("s3 Test", () => {
   const s3Key: string = "tests3objkey";
+
   let svc: S3Svc;
   let app: TestingModule;
 

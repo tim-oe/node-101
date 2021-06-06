@@ -7,10 +7,6 @@ describe("SQS Test", () => {
   let svc: SQSSvc;
   let app: TestingModule;
 
-  beforeEach(async () => {
-    // TODO
-  });
-
   beforeAll(async () => {
     app = await bootstrap();
 

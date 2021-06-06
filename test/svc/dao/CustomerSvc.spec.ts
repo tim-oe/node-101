@@ -22,7 +22,14 @@ describe("CustomerSvc Test", () => {
   afterEach(async () => {
     await transactionalContext.finish();
   });
+
   beforeAll(async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const globalAny: any = global;
+    console.log(
+      "globalAny.__CONTAINER__\n" + JSON.stringify(globalAny.__CONTAINER__)
+    );
+
     app = await bootstrap();
 
     svc = app.get<CustomerSvc>(CustomerSvc);
